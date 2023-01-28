@@ -71,8 +71,12 @@ Given this fact, the probability that an agent chooses to live in location $i$ a
 \begin{align*}
     \Pr\left(U_{ij}\geq \max_{r,s} U_{rs}\right) &= \Pr\left(U_{ij}\geq \max_{s} U_{is}\right)\Pr\left(U_{ij}\geq \max_{r} U_{kr},\quad\forall k\right) \\ 
     &= \prod_{s\neq i}\Pr\left( U_{ij}\geq U_{is}\right)\left[\prod_{r\neq j}\prod_{k}\Pr\left(U_{ij}\geq U_{kr}\right)\right] \\
-    &= \int_0^{\infty}\prod_{s\neq i}G_{is}(u)\left[\prod_{r\neq j}\prod_{k}G_{kr}(u)\right]\mathrm{d}G_{ij}(u)
+    &= \int_0^{\infty}\theta\Phi_{ij}u^{-(\theta+1)}\prod_{s}\prod_{r}e^{-\Phi_{rs}u^{-\theta}} \mathrm{d}u \\ 
+    &= \int_0^{\infty}\theta\Phi_{ij}u^{-(\theta+1)}e^{-\sum_{r}\sum_{s}\Phi_{rs}u^{-\theta}} \mathrm{d}u \\ 
+    &= \frac{\Phi_{ij}}{\Phi}\int_0^{\infty}\theta\Phi u^{-(\theta+1)}e^{-\Phi u^{-\theta}} \mathrm{d}u \\ 
+    &= \frac{\Phi_{ij}}{\Phi} = \pi_{ij}
 \end{align*}
+where $\Phi=\sum_{r}\sum_{s}\Phi_{rs}$
 
 \subsection{Firms}
 
