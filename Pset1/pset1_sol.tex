@@ -3,6 +3,7 @@
 \usepackage{fancyhdr,enumitem,xcolor,subcaption}
 \usepackage{graphicx} % Allows including images
 \usepackage[left=3cm, right=3cm, top =2cm, bottom = 3cm]{geometry}
+% \newcommand{\}{}
 
 
 \pagestyle{plain}
@@ -17,7 +18,7 @@
 
 
 \title{Spatial Economics - Problem Set I}
-\author{Isaac Norwich \and Jose M. Quintero \and Jun Wong}
+\author{Jose M. Quintero \and Jun Wong \and Rachel Williams}
 
 \begin{document}
 
@@ -32,41 +33,83 @@ Some blah blah of what are we going to do, summarize the ingredients of the mode
 A lot of blah, but most critical excellent maps should go here! Beautiful and colorful. 
 
 \section{The Model}
-Two building blocks: Berlin Wall paper and Detroit paper. Say what we take from each and maybe our innovation(if we are able! Come on, guys! Piece of cake! We got this!)\footnote{I am going to mix and match the notation of both papers just because I'm asshole.}
+
 
 \subsection{Households}
 A household is characterized by the neighborhood where she resides $i$ and where she works $j$. The household consume final good $c_{ij}$, land $H_{ij}$. Their utility is enhanced by neighborhood-specific amenities $B_i(R_i)$. Agents additionally have an idiosyncratic shock to their preferences $z_{ij}$ and $\kappa_{ij}\geq 1$ is the disutility of commuting from $i$ to $j$.  \\ 
-\begin{figure}[htb]
-     \begin{center}
-     \begin{subfigure}[b]{0.4\textwidth}
-     \centering
-         \[ \textcolor{blue}{U_{ij} = \frac{B_i(R_i)z_{ij}}{\kappa_{ij}}\left(\frac{c_{ij}}{\beta}\right)^{\beta}\left(\frac{H_{ij}}{1-\beta}\right)^{1-\beta}  } \]
-         \caption{\textcolor{blue}{Detroit Paper}}
-     \end{subfigure}
-     \hfill
-     \begin{subfigure}[b]{0.4\textwidth}
-     \centering
-          \[ \textcolor{red}{U_{ij} = \frac{B_iz_{ij}}{\kappa_{ij}}\left(\frac{c_{ij}}{\beta}\right)^{\beta}\left(\frac{H_{ij}}{1-\beta}\right)^{1-\beta}  } \]
-         \caption{\textcolor{red}{Berlin Paper}}
-     \end{subfigure}
-     \end{center}
-\end{figure}
-\textcolor{teal}{The only difference between both utilities is the externalities of living with more people. In the Detroit paper, there are externalities to having more neighbors.} 
-
-
+\begin{equation}
+    U_{ij}(z_{ij}) = \frac{B_iz_{ij}}{\kappa_{ij}}\left(\frac{c_{ij}}{\beta}\right)^{\beta}\left(\frac{H_{ij}}{1-\beta}\right)^{1-\beta}
+\end{equation}
 Following the trade literature, we assume that the shock is distributed Fréchet 
 \begin{align*}
     \textcolor{blue}{F(s_{ij})} &\textcolor{blue}{= e^{\lambda_{ij}s_{ij}^{-\theta}}} & \textcolor{red}{F(s_{ij})} &\textcolor{red}{= e^{\lambda^o_{i}\lambda^d_js_{ij}^{-\theta}}}
 \end{align*}
-with $\theta>0$. \\ 
-\textcolor{teal}{I don't think the decision here matters because I doubt we can identify $\lambda^o$ and $\lambda^d$ separately. Maybe the specification can be used for interpretation and counterfactuals.}
+with $\theta>0$. 
+The budget restriction for the agent is 
+\begin{equation*}
+    c + q_i^{r}H_{ij} = w_j
+\end{equation*}
+where I am normalizing the price of the consumption good and assume it is freely tradable within the city. Using profit maximization since the utility is a Cobb-Douglas, then the optimal decisions for $c$ and $H$ are  
+\begin{align*}
+    c_{ij} &= \beta w_j & H_{ij}&= \frac{(1-\beta)w_j}{q_i^{r}}
+\end{align*}
+Then the utility for an agent living in neighborhood $i$, working in $j$ with a preference shock is 
+\begin{equation}
+    U_{ij}(z_{ij}) = \frac{B_iz_{ij}w_j}{\kappa_{ij}q_{i}^{1-\beta}}
+\end{equation}
+The intuition of the equation is pretty standard. Higher wages yield higher utility, higher commuting cost decreases utility, amenities increase utility, prices decrease utility and the preference shock increases utility. 
 
-
+\subsection{Commuting Flows}
+First, notice that the utility is also distributed Fréchet, 
+\begin{align*}
+    \Pr\left(U_{ij}\leq u\right) &= \Pr\left(\frac{B_iz_{ij}w_j}{\kappa_{ij}q_{i}^{1-\beta}}\leq u\right) 
+    = \Pr\left( z_{ij}\leq \frac{u\kappa_{ij}q_i^{1-\beta}}{B_iw_j}\right) \\ 
+    &= \exp\left(-\lambda_{ij}\left(\frac{B_iz_{ij}w_j}{\kappa_{ij}q_{i}^{1-\beta}}\right)^\theta u^{-\theta}\right) \\ 
+    &= \exp\left(-\Phi_{ij}u^{-\theta}\right) = G_{ij}(u)
+\end{align*}
+Given this fact, the probability that an agent chooses to live in location $i$ and work in location $j$ is 
+\begin{align*}
+    \Pr\left(U_{ij}\geq \max_{r,s} U_{rs}\right) &= \Pr\left(U_{ij}\geq \max_{s} U_{is}\right)\Pr\left(U_{ij}\geq \max_{r} U_{kr},\quad\forall k\right) \\ 
+    &= \prod_{s\neq i}\Pr\left( U_{ij}\geq U_{is}\right)\left[\prod_{r\neq j}\prod_{k}\Pr\left(U_{ij}\geq U_{kr}\right)\right] \\
+    &= \int_0^{\infty}\prod_{s\neq i}G_{is}(u)\left[\prod_{r\neq j}\prod_{k}G_{kr}(u)\right]\mathrm{d}G_{ij}(u)
+\end{align*}
 
 \subsection{Firms}
 
-\subsection{Land}
+Firms produce a tradable good using a combination of labor $L_j$ and land $H_j^p$. To keep production simple, assume that the firms combine both inputs using a Cobb-Douglas production function with constant returns to scale
+\begin{equation}
+    Y_j = A_jL_j^\alpha \left(H_j^p\right)^{1-\alpha}, \quad\alpha\in(0,1)
+\end{equation}
+Let $y_t$ be the normalized output per unit of land, and $w_j$ the wage paid in location $j$. Then, the optimization problem for the firm is 
+\begin{equation*}
+    \max_{\ell_j} A_j\ell_j^\alpha - w_j\ell_j
+\end{equation*}
+The FOC implies the following wage
+\begin{equation}
+    w_j = \alpha A_j\ell_j^{\alpha-1}
+\end{equation}
+Assuming that $1-\alpha>\gamma$\footnote{$1-\alpha$ is the price elasticity of land. This assumption ensures that the agglomeration spillovers governed by $\gamma$ do not overtake the congestion effects.}, the labor demand function for location $j$ is decreasing and has the form: 
+\begin{equation*}
+    L_j = \left(\frac{A_j\alpha}{w_j}\right)^{\frac{1}{1-\alpha}}H_j^p
+\end{equation*}
+Finally, as the firm has constant returns to scale, it will rent land until it hits zero profits. Then the demand for land it 
+\begin{align*}
+    q_j &= \frac{Y_j - w_jL_j}{H^p_j} \\ 
+    &= (1-\alpha)A_j\ell_j^{\alpha} \\ 
+    &= (1-\alpha)A_j\left(\frac{\alpha A_j}{w_j}\right)^{\frac{\alpha}{1-\alpha}}
+\end{align*}
 
+\subsection{Market Clearing Conditions}
+For this section, we borrow the structure from the Berlin paper. Let $\theta_j$ be the share of land use for production. Then, for there not to be arbitrage, it has to be true that 
+\begin{equation*}
+    \theta_i = \begin{cases}
+    1 &\mbox{if } q_i^p>q_i^r \\ 
+    \in[0,1] &\mbox{if } q_i^p=q_i^r \\
+    0 &\mbox{if } q_i^p<q_i^r 
+    \end{cases}
+\end{equation*}
+
+\subsection{Extension: Two types}
 
 
 \end{document}
