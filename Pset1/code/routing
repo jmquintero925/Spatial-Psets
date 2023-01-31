@@ -1,0 +1,70 @@
+# Get routing distance and time matrix 
+# 
+
+library(sf)
+library(data.table)
+library(osrm)
+
+zillow_shp <- st_read("../Data/zillow_neighborhoods",     
+        "chicago_zillow_neighborhoods") %>%
+    filter(City=="Chicago" & County == "Cook") %>%
+    arrange(RegionID) %>%
+    st_transform(crs=4326)
+
+# since we are assuming things to be symmetric, let 
+src_dst <- data.table::CJ(zillow_shp$RegionID, 
+        zillow_shp$RegionID)
+setnames(src_dst, c("V1", "V2"), c("src_id", "dst_id"))
+setorder(src_dst, src_id, dst_id)
+src_dst <- dcast(src_dst, src_id ~ dst_id)
+rownames(src_dst) <- src_dst$src_id
+src_dst <- src_dst[,src_id :=NULL]
+
+lower_src_dst <- lower.tri(as.matrix(src_dst), diag = FALSE) %>%
+    as.data.table()
+colnames(lower_src_dst) <- colnames(src_dst)
+lower_src_dst <- lower_src_dst[, src_id := rownames(src_dst)]
+lower_src_dst <- melt(lower_src_dst, 
+    id.vars = "src_id", 
+    variable.name = "dst_id")
+lower_src_dst <- lower_src_dst[value==TRUE, ][, value:=NULL]
+
+# get centroid 
+zillow_cnt <- st_centroid(zillow_shp) %>%
+    st_coordinates()
+zillow_cnt <- cbind("id" = zillow_shp$RegionID, 
+        "x" = zillow_cnt[,1], 
+        "y" = zillow_cnt[,2]) %>%
+    as.data.frame() %>%
+    mutate(across(c("x", "y"), as.numeric))
+
+lower_src_dst <- merge(lower_src_dst, zillow_cnt, 
+    by.x = "src_id", by.y="id")
+setnames(lower_src_dst, c("x", "y"), c("src_x", "src_y"))
+
+lower_src_dst <- merge(lower_src_dst, zillow_cnt, 
+    by.x = "dst_id", by.y="id")
+setnames(lower_src_dst, c("x", "y"), c("dst_x", "dst_y"))
+
+src <- lower_src_dst[, list(src_id, src_x, src_y)] %>%
+   st_as_sf(coords=c("src_x", "src_y"), crs = 4326, agr = "constant")
+
+dst <- lower_src_dst[, list(dst_id, dst_x, dst_y)] %>%
+   st_as_sf(coords=c("dst_x", "dst_y"), crs = 4326, agr = "constant")
+
+# unfortunately we need to do this one route at a time:
+routes <- list()
+for (i in 1:nrow(src)) {
+    routes[[i]] <- osrmRoute(src[i, ], dst[i, ])
+    Sys.sleep(1)
+    print(i)
+}
+save(routes, file = "../Data/osrm_routes.R")
+
+rr = rbindlist(routes) %>% st_as_sf()
+rr <- cbind(rr, st_drop_geometry(src))
+rr <- cbind(rr, st_drop_geometry(dst))
+st_write(rr, "../Data/driving_routes", 
+    "driving_routes", 
+    driver = "ESRI Shapefile", 
+    delete_layer = TRUE)

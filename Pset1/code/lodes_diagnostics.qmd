@@ -1,0 +1,256 @@
+---
+title: "LODES Diagnostics --- Neighborhood Level"
+format:
+    html:
+        code-fold: true
+---
+
+# Trumbull Park does not have any associated commuters
+We will drop this neighborhood from now on---so we have 226 neighborhoods.
+```{r}
+#| echo: false 
+#| warning: false
+#| output: false
+library(tidyverse)
+library(sf)
+
+src <- read.csv("../Data/src_wages_residents.csv") 
+zillow_shp <- st_read("../Data/zillow_neighborhoods",     
+        "chicago_zillow_neighborhoods") %>%
+    filter(City=="Chicago" & County=="Cook") %>%
+    mutate(h_regionid = as.numeric(RegionID))
+
+src <- left_join(zillow_shp, src, by="h_regionid")
+```
+
+```{r}
+#| echo: false 
+#| warning: false
+mapview::mapview(filter(src, is.na(wages)))
+
+src <- src %>%
+    filter(!is.na(wages))
+```
+
+# Residents and Distribution of Wages Across Origin Neighborhoods
+
+@fig-residents shows the number of residents as summarized by the total number of jobs originating from the particular neighborhood. @fig-homewages shows the distribution of income by where people are commuting from. Note that this is calculated as: $$w_j = \sum_{i=1}^I \pi_{ij} w_i $$
+where $\pi_{ij}$ is the probability of commuting from neighborhood $j$ to neighborhood $i$. 
+```{r}
+#| label: fig-residents
+#| fig-cap: Number of Residents
+ggplot(src) + 
+  geom_sf(aes(fill=num_residents), color="grey70", lwd=0.1) + 
+  scale_fill_distiller(palette = "YlOrBr", na.value = "grey50", 
+                       direction=1, name = "Population") + 
+  theme_void() +
+  theme(legend.position = "bottom", legend.box="horizontal",
+        legend.key.width = unit(1.5, "cm")) + 
+  guides(fill = guide_colorbar(title.position="top", 
+                                     title.hjust =0.5))
+ggsave("../output/diagnostic_num_residents.pdf")
+```
+
+```{r}
+#| label: fig-homewages
+#| fig-cap: Distribution of Wages
+ggplot(src) + 
+  geom_sf(aes(fill=wages), color="grey70", lwd=0.1) + 
+  scale_fill_distiller(palette = "YlOrBr", na.value = "grey50", 
+                       direction=1, name = "Income") + 
+  theme_void() +
+  theme(legend.position = "bottom", legend.box="horizontal",
+        legend.key.width = unit(1.5, "cm")) + 
+  guides(fill = guide_colorbar(title.position="top", 
+                                     title.hjust =0.5))
+ggsave("../output/diagnostic_home_wages.pdf")
+
+```
+
+# Employment and Distribution of Wages Across Destination Neighborhoods
+
+```{r}
+#| echo: false 
+#| warning: false
+#| output: false 
+dst <- read.csv("../Data/dst_wages_employment.csv") 
+zillow_shp <- st_read("../Data/zillow_neighborhoods",     
+        "chicago_zillow_neighborhoods") %>%
+    filter(City=="Chicago" & County=="Cook") %>%
+    mutate(w_regionid = as.numeric(RegionID))
+
+dst <- left_join(zillow_shp, dst, by="w_regionid")
+
+dst <- dst %>%
+    filter(!is.na(wages))
+```
+
+@fig-employment shows the number of employees in a certain neighborhood, calculated as the total number of people who are commuting to the neighborhood as a destination. Note that without the log, the loop is very concentrated. This is for aesthetic reasons. @fig-workwages shows the distribution of average wage earned in a particular neighborhood. Clearly, the distribution of the "quality" of jobs are very different compared to the distribution of the "income." While the range here is larger, the concentration of income along the Northeast of Chicago in @fig-homewages is stark.
+
+```{r}
+#| label: fig-employment
+#| fig-cap: Number of Employees
+ggplot(dst) + 
+  geom_sf(aes(fill=log(num_employment)), color="grey70", lwd=0.1) + 
+  scale_fill_distiller(palette = "YlOrBr", na.value = "grey50", 
+                       direction=1, name = "Log(Employment)") + 
+  theme_void() +
+  theme(legend.position = "bottom", legend.box="horizontal",
+        legend.key.width = unit(1.5, "cm")) + 
+  guides(fill = guide_colorbar(title.position="top", 
+                                     title.hjust =0.5))
+ggsave("../output/diagnostic_num_employment.pdf")
+```
+
+
+```{r}
+#| label: fig-workwages
+#| fig-cap: Distribution of Wages At Employment
+ggplot(dst) + 
+  geom_sf(aes(fill=wages), color="grey70", lwd=0.1) + 
+  scale_fill_distiller(palette = "YlOrBr", na.value = "grey50", 
+                       direction=1, 
+                       name = "Wages Offered at Employment Destination") + 
+  theme_void() +
+  theme(legend.position = "bottom", legend.box="horizontal",
+        legend.key.width = unit(1.5, "cm")) + 
+  guides(fill = guide_colorbar(title.position="top", 
+                                     title.hjust =0.5))
+ggsave("../output/diagnostic_work_wages.pdf")
+```
+
+# Commuting gravity
+Consider the gravity of people commuting to the loop, which is indexed by the neighborhood ID of 269593. For fun, Hyde Park is 269586. 
+
+```{r}
+#| echo: false 
+#| warning: false 
+#| output: false
+
+commute <- read.csv("../Data/lodes_od.csv")
+zillow_shp <- st_read("../Data/zillow_neighborhoods",     
+        "chicago_zillow_neighborhoods") %>%
+    filter(City=="Chicago" & County=="Cook") %>%
+    mutate(h_regionid = as.numeric(RegionID))
+
+loop_commute <- commute %>%
+    filter(w_regionid == 269593) %>%
+    left_join(., zillow_shp, by="h_regionid") %>%
+    st_as_sf()
+
+hp_commute <- commute %>%
+    filter(w_regionid == 269586) %>%
+    left_join(., zillow_shp, by="h_regionid") %>%
+    st_as_sf()
+
+cost <- read.csv("../Data/commuting_cost.csv") %>%
+    rename(h_regionid = src_id)
+
+loop_cost <- cost %>%
+    filter(dst_id == 269593) %>%
+    left_join(., zillow_shp, by="h_regionid") %>%
+    st_as_sf()
+
+hp_cost <- cost %>%
+    filter(dst_id == 269586) %>%
+    left_join(., zillow_shp, by="h_regionid") %>%
+    st_as_sf()
+
+
+```
+
+Who commutes to good jobs? Those with high income in the income map.
+
+```{r}
+ggplot(loop_commute) + 
+  geom_sf(aes(fill=share_commuters), color="grey70", lwd=0.1) + 
+  scale_fill_distiller(palette = "YlOrBr", na.value = "grey50", 
+                       direction=1, 
+                       name = "Commuting Probability") + 
+  theme_void() +
+  theme(legend.position = "bottom", legend.box="horizontal",
+        legend.key.width = unit(1.5, "cm")) + 
+  guides(fill = guide_colorbar(title.position="top", 
+                                     title.hjust =0.5))
+
+ggsave("../output/diagnostic_loop_commutingprob.pdf")
+```
+
+How does this relate to commuting cost? Below plots both driving distance and time. At first glance, they seem about equal.
+
+```{r}
+ggplot(loop_cost) + 
+  geom_sf(aes(fill=duration), color="grey70", lwd=0.1) + 
+  scale_fill_distiller(palette = "YlOrBr", na.value = "grey50", 
+                       direction=1, 
+                       name = "Driving Time") + 
+  theme_void() +
+  theme(legend.position = "bottom", legend.box="horizontal",
+        legend.key.width = unit(1.5, "cm")) + 
+  guides(fill = guide_colorbar(title.position="top", 
+                                     title.hjust =0.5))
+ggsave("../output/diagnostic_loop_commutingcost.pdf")
+
+ggplot(loop_cost) + 
+  geom_sf(aes(fill=distance), color="grey70", lwd=0.1) + 
+  scale_fill_distiller(palette = "YlOrBr", na.value = "grey50", 
+                       direction=1, 
+                       name = "Driving Distance") + 
+  theme_void() +
+  theme(legend.position = "bottom", legend.box="horizontal",
+        legend.key.width = unit(1.5, "cm")) + 
+  guides(fill = guide_colorbar(title.position="top", 
+                                     title.hjust =0.5))
+ggsave("../output/diagnostic_loop_commutingcost_distance.pdf")
+
+```
+
+For fun: who commutes to Hyde Park? 
+```{r}
+ggplot(hp_commute) + 
+  geom_sf(aes(fill=share_commuters), color="grey70", lwd=0.1) + 
+  scale_fill_distiller(palette = "YlOrBr", na.value = "grey50", 
+                       direction=1, 
+                       name = "Commuting Probability") + 
+  theme_void() +
+  theme(legend.position = "bottom", legend.box="horizontal",
+        legend.key.width = unit(1.5, "cm")) + 
+  guides(fill = guide_colorbar(title.position="top", 
+                                     title.hjust =0.5))
+ggsave("../output/diagnostic_hp_commutingprob.pdf")
+
+```
+
+How does this relate to commuting cost? Here, when you look at the importance of duration vs. distance, since HP is not central, the cost of commuting looks a bit different. 
+
+```{r}
+ggplot(hp_cost) + 
+  geom_sf(aes(fill=duration), color="grey70", lwd=0.1) + 
+  scale_fill_distiller(palette = "YlOrBr", na.value = "grey50", 
+                       direction=1, 
+                       name = "Driving Time") + 
+  theme_void() +
+  theme(legend.position = "bottom", legend.box="horizontal",
+        legend.key.width = unit(1.5, "cm")) + 
+  guides(fill = guide_colorbar(title.position="top", 
+                                     title.hjust =0.5))
+ggsave("../output/diagnostic_loop_commutingcost.pdf")
+
+ggplot(hp_cost) + 
+  geom_sf(aes(fill=distance), color="grey70", lwd=0.1) + 
+  scale_fill_distiller(palette = "YlOrBr", na.value = "grey50", 
+                       direction=1, 
+                       name = "Driving Distance") + 
+  theme_void() +
+  theme(legend.position = "bottom", legend.box="horizontal",
+        legend.key.width = unit(1.5, "cm")) + 
+  guides(fill = guide_colorbar(title.position="top", 
+                                     title.hjust =0.5))
+ggsave("../output/diagnostic_loop_commutingcost_distance.pdf")
+
+```
+
+For exploration:
+```{r}
+mapview::mapview(zillow_shp)
+```

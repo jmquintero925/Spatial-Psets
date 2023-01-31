@@ -1,0 +1,235 @@
+---
+title: "Clean LODES data"
+format:
+    html:
+        code-fold: true
+---
+
+```{r}
+#| warning: false
+#| output: false
+
+library(data.table)
+library(tidyverse)
+library(sf)
+`%notin%` = Negate(`%in%`)
+
+tract_shp <- st_read("../Data/Boundaries - Census Tracts - 2010",
+        "geo_export_17682e57-ce98-43d5-9369-ca3878b38a63") %>%
+    st_transform(crs = 3857)
+zillow_shp <- st_read("../Data/zillow_neighborhoods",     
+        "chicago_zillow_neighborhoods") %>%
+    filter(City=="Chicago")
+```
+
+# Create tract -> zillow neighborhood crosswalk
+
+Get area of each tract/neighborhood. Note that area is measured in $m^2$. 
+```{r}
+#| warning: false
+tract_shp <- cbind(tract_shp, 
+        "tract_area" =st_area(tract_shp))
+zillow_shp <- cbind(zillow_shp, 
+        "nhood_area" = st_area(zillow_shp))
+
+zillow_shp <- mutate(zillow_shp, 
+        nhood_area = as.numeric(nhood_area))
+tract_shp <- mutate(tract_shp, 
+        tract_area = as.numeric(tract_area))
+```
+
+Summary of tract areas:
+```{r}
+#| echo: false
+#| warning: false 
+summary(tract_shp$tract_area)
+```
+
+Summary of neighborhood areas:
+```{r}
+#| echo: false
+#| warning: false 
+summary(zillow_shp$nhood_area)
+```
+
+
+Now we want to intersect the two shapefiles
+```{r}
+#| warning: false
+intersection <- st_intersection(tract_shp, zillow_shp)
+
+intersection <- cbind(intersection, 
+        "int_area" = st_area(intersection))
+intersection <- intersection %>%
+    mutate(int_area = as.numeric(int_area),
+           share_area = int_area / tract_area)
+    
+summary(intersection %>%
+    st_drop_geometry() %>%
+    group_by(geoid10) %>%
+    summarize(num_nhoods = n(),
+              max_area = max(share_area, na.rm=T),
+              min_area = min(share_area, na.rm=T))
+)
+
+# anything less than 1 percent let's just ignore 
+intersection <- intersection %>%
+    select(geoid10, name10 ,RegionID, Name, share_area) %>%
+    filter(share_area > 0.01) %>%
+    mutate(share_area = ifelse(share_area >= 0.99, 
+              1, 
+              share_area) ,
+           geoid10 = as.numeric(geoid10)) %>%
+    st_drop_geometry() %>%
+    setDT()
+
+not_in_zillow <- tract_shp %>%
+    filter(geoid10 %notin% intersection$geoid10)
+
+```
+
+But you lose `r nrow(not_in_zillow)` census tracts, why?
+
+```{r}
+#| warning: false
+
+mapview::mapview(not_in_zillow) + mapview::mapview(zillow_shp, col.regions="red")
+```
+
+This seems fine. It is out of city boundary.
+
+# Aggregate LODES 
+```{r}
+#| warning: false
+
+lodes_od <- fread("../Data/il_od_main_JT01_2019.csv")
+lodes_od <- lodes_od %>% 
+    mutate(h_geocode = as.character(h_geocode),
+           h_geocode = substr(h_geocode,1,nchar(h_geocode)-4),
+           w_geocode = as.character(w_geocode),
+           w_geocode = substr(w_geocode, 1, nchar(w_geocode)-4)) %>% 
+    filter(h_geocode %in% intersection$geoid10 & 
+           w_geocode %in% intersection$geoid10) %>%
+    mutate(h_geocode = as.numeric(h_geocode),
+           w_geocode = as.numeric(w_geocode)) %>%
+    group_by(h_geocode, w_geocode) %>%
+    summarize(across(S000:SE03, ~(sum(.x, na.rm=T)))) %>%
+    ungroup()
+```
+Tract level LODES summary:
+```{r}
+summary(lodes_od)
+```
+
+Aggregate LODES to neighborhood level
+```{r}
+#| warning: false
+lodes_od <- merge(lodes_od, intersection, 
+    by.x = "h_geocode", 
+    by.y = "geoid10", 
+    all.x = TRUE, all.y = FALSE, allow.cartesian = TRUE)
+setnames(lodes_od, 
+    c("RegionID", "Name", "share_area"), 
+    c("h_regionid", "h_nhood_name", "h_share_area"))
+
+# this gives: how many people commute from a certain neighborhood to a certain tract 
+lodes_od <- lodes_od %>%
+    group_by(h_regionid, w_geocode) %>%
+    summarize(across(S000:SE03, 
+        ~(sum(.x * h_share_area, na.rm=T)))) %>%
+    ungroup()
+
+# merge on destination and aggregate by destination so you get how many people commute from a certain neighborhood to another neighborhood
+lodes_od <- merge(lodes_od, intersection, 
+    by.x = "w_geocode", 
+    by.y = "geoid10", 
+    all.x = TRUE, all.y = FALSE, allow.cartesian = TRUE)
+setnames(lodes_od, c("RegionID", "Name", "share_area"), c("w_regionid", "w_nhood_name", "w_share_area"))
+
+lodes_od <- lodes_od %>%
+    group_by(h_regionid, w_regionid) %>%
+    mutate(across(S000:SE03, ~(.x * w_share_area))) %>%
+    summarize(across(S000:SE03, ~(sum(.x, na.rm=T)))) %>%
+    ungroup() %>%
+    group_by(h_regionid) %>%
+    mutate(total_commuters = sum(S000)) %>%
+    mutate(share_commuters = S000 / total_commuters) %>%
+    ungroup()
+
+write.csv(lodes_od, file="../Data/lodes_od.csv")
+
+```
+
+Summary at the neighborhood level
+```{r}
+summary(lodes_od)
+```
+ 
+My question here: do we want to round this?
+
+# Inferring wages
+Wages at employment destination $w_i$; top bin is $7293 per month as in Detroit paper.
+```{r}
+dst_wages <- lodes_od %>% 
+    group_by(w_regionid) %>%
+    summarize(across(S000:SE03, ~(sum(.x, na.rm=T))))
+dst_wages <- dst_wages %>%
+    mutate(wages = 12 * (
+            (SE01 * (0 + 1250) / 2) + 
+            (SE02 * (1251 + 3333) / 2) + 
+            (SE03 * (3334 +7293) / 2)) / 
+            (SE01 + SE02 + SE03)) %>%
+    select(w_regionid, wages, S000) %>%
+    rename(num_employment = S000)
+write.csv(dst_wages, file="../Data/dst_wages_employment.csv")
+
+summary(dst_wages)
+```
+
+Wages at residential origin
+$$w_j = \sum_{i=1}^I \pi_{ij} w_i $$
+where $\pi_{ij}$ is the probability of commuting from neighborhood $j$ to neighborhood $i$. 
+```{r}
+src_wages <- lodes_od %>%
+    left_join(., dst_wages, by="w_regionid") %>%
+    group_by(h_regionid) %>%
+    summarize(wages = sum(wages * share_commuters),
+              num_residents = sum(S000))
+write.csv(src_wages, file="../Data/src_wages_residents.csv")
+
+summary(src_wages)
+```
+
+# Get commuting flows 
+
+In `routing.R`, we used OSRM () to get the driving routes from centroid to centroid. Note that to ensure symmetry, we only ran the engine for the lower triangular matrix. Example of one driving route:
+
+```{r}
+#| warning: false
+routes <- st_read("../Data/driving_routes", "driving_routes") %>%
+    select(-c("src", "dst"))
+mapview::mapview(routes[c(1,1000, 10000),])
+```
+
+Notice a few things: the shp above does not contain: own-own distance and the upper triangular entries. We need to fill those in. 
+
+```{r}
+# build commuting flows 
+own_own <- data.frame("src_id" = zillow_shp$RegionID, 
+    "dst_id" = zillow_shp$RegionID, 
+    "duration"  = 0,
+    "distance" = 0)
+own_own <- unique(own_own)
+
+routes_upper <- routes %>%
+    rename(src_id = dst_id,
+           dst_id = src_id) 
+
+routes <- rbind(routes, routes_upper) %>%
+    st_drop_geometry()
+routes <- rbind(routes, own_own)
+
+# arrange routes 
+routes <- arrange(routes, src_id, dst_id)
+write.csv(routes, file="../Data/commuting_cost.csv")
+```
