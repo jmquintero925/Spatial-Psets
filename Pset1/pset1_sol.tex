@@ -55,7 +55,7 @@ where I am normalizing the price of the consumption good and assume it is freely
 \end{align*}
 Then the utility for an agent living in neighborhood $i$, working in $j$ with a preference shock is 
 \begin{equation}
-    U_{ij}(z_{ij}) = \frac{B_iz_{ij}w_j}{\kappa_{ij}q_{i}^{1-\beta}}
+    U_{ij}(z_{ij}) = \frac{B_iz_{ij}w_j}{\kappa_{ij}(q_{i}^r)^{1-\beta}}
 \end{equation}
 The intuition of the equation is pretty standard. Higher wages yield higher utility, higher commuting cost decreases utility, amenities increase utility, prices decrease utility and the preference shock increases utility. 
 
@@ -119,12 +119,12 @@ Assuming that $1-\alpha>\gamma$, the labor demand function for location $j$ is d
 \end{equation*}
 Finally, as the firm has constant returns to scale, it will rent land until it hits zero profits. Then the demand for floor space it 
 \begin{align*}
-    q_j &= \frac{Y_j - w_jL_j}{H^p_j} \\ 
+    q_j^p &= \frac{Y_j - w_jL_j}{H^p_j} \\ 
     &= (1-\alpha)A_j\ell_j^{\alpha} \\ 
     &= \boxed{(1-\alpha)A_j\left(\frac{\alpha A_j}{w_j}\right)^{\frac{\alpha}{1-\alpha}}}
 \end{align*}
 
-\subsection{Market Clearing Conditions}
+\subsection{Floor Space}
 For this section, we borrow the structure from the Berlin paper. Let $\theta_j$ be the share of floor space use for production. Then, for there not to be arbitrage, it has to be true that 
 \begin{equation*}
     \theta_i = \begin{cases}
@@ -133,9 +133,79 @@ For this section, we borrow the structure from the Berlin paper. Let $\theta_j$ 
     0 &\mbox{if } q_i^p<q_i^r 
     \end{cases}
 \end{equation*}
-Following the standard assumptions of urban models, floor space is supplied by competitive landlords. 
+Let $Q_i=\max\{q_i^p,q_i^r\}$ be the observed price for floor space. Following the standard assumptions of urban models, floor space is supplied by competitive landlords. Specifically, floor space is produced using capital and land using a Cobb-Douglas aggregator
+\begin{equation*}
+    H_i = M_i^\mu K_i^{1-\mu}
+\end{equation*}
+Denote by $P$ the price for capital which is common across the city and $R_i$ the price for land. FOC imply that 
+\begin{align*}
+    \frac{\mu}{1-\mu}\frac{K_i}{M_i} = \frac{P}{R_i}
+\end{align*}
+By substituting $\sfrac{K_i}{M_i}$ in any of the FOC from the landlord it follows that
+\begin{equation*}
+    \boxed{Q_i = \underbrace{\mu^{-\mu}(1-\mu)^{1-\mu}P^{-\mu}}_{\chi}R_i^{1-\mu} }
+\end{equation*}
+Similarly, the total supply of floor space can be written as 
+\begin{equation*}
+    \boxed{H_i = \underbrace{\varphi_i}_{M_i^\mu}K_i^{1-\mu}}
+\end{equation*}
+Finally, the total demand of labor by the firm in location should equate the commuting flows
+\begin{equation*}
+    L_j = \sum_{i=1}^N \pi_{ij\vert i}L_{Ri}
+\end{equation*}
+
+\subsection{Market clearing conditions}
+First, residential has to clear. Using the optimal demand from the household, \textcolor{red}{I want to write this as the definition of the equilibrium. This is lacking a little structure now but I just wanted to make sure all the pieces are here before moving to the extension. }
+\begin{equation}
+    (1-\theta_i)H_{Ri} = \frac{(1-\beta)L_{Ri}\E\left[w_{Ri}\right]}{q_i^r}
+\end{equation}
+where $L_{Ri}$ is the number of residents in location $i$. Similarly, the market for floor space use for production has to clear and satisfies
+\begin{equation}
+    \theta_i H_i^p = \left(\frac{(1-\alpha)A_i}{q_i}\right)^{\sfrac{1}{\alpha}}L_i
+\end{equation}
+Additionally, the total supply of floor space has to clear. That is 
+\begin{equation}
+    \varphi_iK_i^{1-\mu} = \theta H_i^p + (1-\theta)H_{Ri}
+\end{equation}
+Finally
 
 \subsection{Extension: Two types}
-Now consider there are two types of agents that are imperfect substitutes to the firm. Specifically, the firm combines them with a Cobb-Douglas technology with 
+We now consider a version where there are two types of agents $m\in\{s,u\}$. Let $\delta=\Pr\left(m=s\right)$. Also, assume that the type of the agent is independent from the preference shock. We assume both types of agents are required for production and they are imperfect substitutes. Specifically, we now assume the firms production function is 
+\begin{equation*}
+    Y_j = A_j L_j^\alpha H_j^{1-\alpha}\quad\text{s.t}\quad L_j = L_{js}^\psi L_{ju}^{1-\psi}
+\end{equation*}
+Then the full problem of the firm is 
+\begin{equation*}
+    \max_{L_{sj},L_{uj},H_j}  A_j L_j^\alpha H_j^{1-\alpha}-w_sL_{sj}-w_uL_{uj}-q_j^pH_j^p\quad\text{s.t}\quad L_j = L_{js}^\psi L_{ju}^{1-\psi}
+\end{equation*}
+Consider again the normalized version of the problem. For the time sake I drop the location subindex and later bring it back again. The FOC are 
+\begin{align*}
+    [\ell_s]&: & w_s&= A\alpha\left[\left(\frac{\ell_s}{\ell_u}\right)^{\psi}\ell_u\right]^{\alpha-1}\psi \left(\frac{\ell_u}{\ell_s}\right)^{1-\psi}  & \\ 
+    [\ell_u]&: & w_u&= A\alpha\left[\left(\frac{\ell_s}{\ell_u}\right)^{\psi}\ell_u\right]^{\alpha-1}(1-\psi) \left(\frac{\ell_u}{\ell_s}\right)^{-\psi} &
+\end{align*}
+Combining both FOC it follows that
+\begin{equation*}
+    \frac{\ell_u}{\ell_s} = \underbrace{\frac{w_s}{w_u}\frac{1-\psi}{\psi}}_{\Gamma}
+\end{equation*}
+The previous equation gives some interesting intuition as the wage premium depends on the price elasticity of each type of labor, governed by $\psi$ and the relative demand. Moreover, the relative demand is constrain within a location which allows to solve for the quantities of labor for each type. By plugging back into the FOC it follows that 
+\begin{equation*}
+    \ell_u = \left(A\alpha\right)^{\frac{1}{1-\alpha}}\left(\frac{\psi}{w_s}\right)^{\frac{\alpha\psi}{1-\alpha}} \left(\frac{1-\psi}{w_u}\right)^{\frac{1-\psi\alpha}{1-\alpha}}
+\end{equation*}
+Similarly, 
+\begin{equation*}
+    \ell_s = \left(A\alpha\right)^{\frac{1}{1-\alpha}}\left(\frac{\psi}{w_s}\right)^{\frac{1-\alpha(1-\psi)}{1-\alpha}} \left(\frac{1-\psi}{w_u}\right)^{\frac{\alpha(1-\psi)}{1-\alpha}}
+\end{equation*}
+and 
+\begin{equation*}
+    \ell = (A\alpha)^{\frac{1}{1-\alpha}}\left(\frac{\psi}{w_s}\right)^{\frac{\psi}{1-\alpha}}\left(\frac{1-\psi}{w_u}\right)^{\frac{1-\psi}{1-\alpha}}
+\end{equation*}
+Note that first-order conditions imply that 
+\begin{equation*}
+    w_s\ell_s +  w_u\ell_u = A\alpha\ell^\alpha
+\end{equation*}
+Then using the zero profit conditions, the price for land is 
+\begin{equation*}
+    q_i^p = A_i(1-\alpha)\ell_i^\alpha = A_i(1-\alpha)\left[A_i\alpha\left(\frac{\psi}{w_s}\right)^{\psi}\left(\frac{1-\psi}{w_u}\right)^{1-\psi}\right]^{\frac{\alpha}{1-\alpha}}
+\end{equation*}
 
 \end{document}
