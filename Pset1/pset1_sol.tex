@@ -1,9 +1,9 @@
 \documentclass[12pt]{article}
-\usepackage{amsmath,amsfonts,bbm}
+\usepackage{amsmath,amsfonts,bbm,xfrac}
 \usepackage{fancyhdr,enumitem,xcolor,subcaption}
 \usepackage{graphicx} % Allows including images
 \usepackage[left=3cm, right=3cm, top =2cm, bottom = 3cm]{geometry}
-% \newcommand{\}{}
+\newcommand{\E}{\mathbb{E}}
 
 
 \pagestyle{plain}
@@ -76,11 +76,32 @@ Given this fact, the probability that an agent chooses to live in location $i$ a
     &= \frac{\Phi_{ij}}{\Phi}\int_0^{\infty}\theta\Phi u^{-(\theta+1)}e^{-\Phi u^{-\theta}} \mathrm{d}u \\ 
     &= \frac{\Phi_{ij}}{\Phi} = \pi_{ij}
 \end{align*}
-where $\Phi=\sum_{r}\sum_{s}\Phi_{rs}$
+where $\Phi=\sum_{r}\sum_{s}\Phi_{rs}$. Using this result the probability an agent resides in location $i$ is 
+\begin{equation*}
+    \pi_{Ri} = \sum_{j=1}^N \pi_{ij} = \frac{1}{\Phi}\sum_{j=1}^N \Phi_{ij}
+\end{equation*}
+Similarly, the probability an agent works in location $j$ is
+\begin{equation*}
+    \pi_{Wj} = \sum_{i=1}^N \pi_{ij} = \frac{1}{\Phi}\sum_{i=1}^N \Phi_{ij}
+\end{equation*}
+Similar, conditional to living in location $i$, the probability of commuting to location $j$ is
+\begin{align*}
+    \pi_{ij\vert i} = \Pr\left(U_{ij}\geq \max_{r}U_{ir}\right) &= \Pr\left(\frac{B_iw_jz_{ij}}{d_{ij}q_i^{1-\beta}} \geq \max_{r} \frac{B_iw_rz_{ir}}{d_{ir}q_i^{1-\beta}} \right) \\ 
+    &= \Pr\left(\frac{w_jz_{ij}}{d_{ij}} \geq \max_{r} \frac{w_rz_{ir}}{d_{ir}} \right) \\ 
+    &= \int_0^\infty\Pr\left(\frac{w_jz_{ij}}{d_{ij}} \geq \max_{r} \frac{w_rz_{ir}}{d_{ir}}\bigg\vert z_{ij} \right) \mathrm{d}G_{ij}(z_{ij}) \\ 
+    &= \int_0^\infty\prod_{r\neq j}\Pr\left(z_{ir}\leq \frac{w_jd_{ir}}{w_rd_{ij}}\bigg\vert z_{ij} \right) \mathrm{d}G_{ij}(z_{ij}) \\ 
+    % &= \int_0^\infty \prod_{r=1}^N\exp\left(-\lambda_{ir}\left(\frac{w_jd_{ir}}{w_rd_{ij}}\right)^{-\theta}z_{ij}^{-\theta}\right)\lambda_{ij}\theta z_{ij}^{-(\theta+1)}\mathrm{d}z_{ij} \\ 
+    &= \int_0^\infty \exp\left(-\left(\frac{w_j}{d_{ij}}\right)^{-\theta}z_{ij}^{-\theta}\sum_{r=1}^N\lambda_{ir}\left(\frac{d_{ir}}{w_r}\right)^{-\theta}z_{ij}^{-\theta}\right)\lambda_{ij}\theta z_{ij}^{-(\theta+1)}\mathrm{d}z_{ij} \\ 
+    &= \frac{\lambda_{ij}\left(\sfrac{w_j}{d_{ij}}\right)^\theta}{\sum_{r=1}^N \lambda_{ir}\left(\sfrac{w_r}{d_{ir}}\right)^{\theta}}
+\end{align*}
+This expression allows to calculate the average wage of people residing in location $i$
+\begin{equation*}
+    \E\left[w_{Ri} \right] = \boxed{\sum_{j=1}^n w_j \pi_{ij\vert i}}
+\end{equation*}
 
 \subsection{Firms}
 
-Firms produce a tradable good using a combination of labor $L_j$ and land $H_j^p$. To keep production simple, assume that the firms combine both inputs using a Cobb-Douglas production function with constant returns to scale
+Firms produce a tradable good using a combination of labor $L_j$ and floor space $H_j^p$. To keep production simple, assume that the firms combine both inputs using a Cobb-Douglas production function with constant returns to scale
 \begin{equation}
     Y_j = A_jL_j^\alpha \left(H_j^p\right)^{1-\alpha}, \quad\alpha\in(0,1)
 \end{equation}
@@ -92,11 +113,11 @@ The FOC implies the following wage
 \begin{equation}
     w_j = \alpha A_j\ell_j^{\alpha-1}
 \end{equation}
-Assuming that $1-\alpha>\gamma$\footnote{$1-\alpha$ is the price elasticity of land. This assumption ensures that the agglomeration spillovers governed by $\gamma$ do not overtake the congestion effects.}, the labor demand function for location $j$ is decreasing and has the form: 
+Assuming that $1-\alpha>\gamma$, the labor demand function for location $j$ is decreasing and has the form: 
 \begin{equation*}
     L_j = \left(\frac{A_j\alpha}{w_j}\right)^{\frac{1}{1-\alpha}}H_j^p
 \end{equation*}
-Finally, as the firm has constant returns to scale, it will rent land until it hits zero profits. Then the demand for land it 
+Finally, as the firm has constant returns to scale, it will rent land until it hits zero profits. Then the demand for floor space it 
 \begin{align*}
     q_j &= \frac{Y_j - w_jL_j}{H^p_j} \\ 
     &= (1-\alpha)A_j\ell_j^{\alpha} \\ 
@@ -104,7 +125,7 @@ Finally, as the firm has constant returns to scale, it will rent land until it h
 \end{align*}
 
 \subsection{Market Clearing Conditions}
-For this section, we borrow the structure from the Berlin paper. Let $\theta_j$ be the share of land use for production. Then, for there not to be arbitrage, it has to be true that 
+For this section, we borrow the structure from the Berlin paper. Let $\theta_j$ be the share of floor space use for production. Then, for there not to be arbitrage, it has to be true that 
 \begin{equation*}
     \theta_i = \begin{cases}
     1 &\mbox{if } q_i^p>q_i^r \\ 
@@ -112,6 +133,7 @@ For this section, we borrow the structure from the Berlin paper. Let $\theta_j$ 
     0 &\mbox{if } q_i^p<q_i^r 
     \end{cases}
 \end{equation*}
+Following the standard assumptions of urban models, floor space is supplied by competitive landlords. 
 
 \subsection{Extension: Two types}
 Now consider there are two types of agents that are imperfect substitutes to the firm. Specifically, the firm combines them with a Cobb-Douglas technology with 
