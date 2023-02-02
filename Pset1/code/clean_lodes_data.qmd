@@ -377,7 +377,8 @@ dst_wages <- dst_wages %>%
     left_join(., src_wages, by="w_regionid") %>%
     mutate(regionid = as.numeric(w_regionid)) %>%
     left_join(., avg_prices, by="regionid") %>%
-    arrange(regionid)
+    arrange(regionid) %>%
+    select(-w_regionid)
 write.csv(dst_wages, 
     file = "../Data/location_characteristics.csv",
     row.names=FALSE)
