@@ -19,7 +19,10 @@ tract_shp <- st_read("../Data/Boundaries - Census Tracts - 2010",
     st_transform(crs = 3857)
 zillow_shp <- st_read("../Data/zillow_neighborhoods",     
         "chicago_zillow_neighborhoods") %>%
-    filter(City=="Chicago")
+    filter(City=="Chicago" & County=="Cook" & 
+           Name != "O'Hare International Airport" & 
+           Name != "Trumbull Park") %>%
+    mutate(regionid = as.numeric(RegionID))
 ```
 
 # Create tract -> zillow neighborhood crosswalk
@@ -156,7 +159,7 @@ lodes_od <- lodes_od %>%
     mutate(share_commuters = S000 / total_commuters) %>%
     ungroup()
 
-write.csv(lodes_od, file="../Data/lodes_od.csv")
+#write.csv(lodes_od, file="../Data/lodes_od.csv")
 
 ```
 
@@ -178,10 +181,13 @@ dst_wages <- dst_wages %>%
             (SE01 * (0 + 1250) / 2) + 
             (SE02 * (1251 + 3333) / 2) + 
             (SE03 * (3334 +7293) / 2)) / 
-            (SE01 + SE02 + SE03)) %>%
-    select(w_regionid, wages, S000) %>%
-    rename(num_employment = S000)
-write.csv(dst_wages, file="../Data/dst_wages_employment.csv")
+            (SE01 + SE02 + SE03),
+           num_employment_hw = SE02 + SE03) %>%
+    select(w_regionid, wages, 
+           num_employment = S000,
+           num_employment_lw = SE01, 
+           num_employment_hw)
+#write.csv(dst_wages, file="../Data/dst_wages_employment.csv")
 
 summary(dst_wages)
 ```
@@ -194,8 +200,10 @@ src_wages <- lodes_od %>%
     left_join(., dst_wages, by="w_regionid") %>%
     group_by(h_regionid) %>%
     summarize(wages = sum(wages * share_commuters),
-              num_residents = sum(S000))
-write.csv(src_wages, file="../Data/src_wages_residents.csv")
+              num_residents = sum(S000),
+              num_residents_lw = sum(SE01),
+              num_residents_hw = sum(SE02 + SE03))
+#write.csv(src_wages, file="../Data/src_wages_residents.csv")
 
 summary(src_wages)
 ```
@@ -206,8 +214,15 @@ In `routing.R`, we used OSRM () to get the driving routes from centroid to centr
 
 ```{r}
 #| warning: false
+#| output: false
 routes <- st_read("../Data/driving_routes", "driving_routes") %>%
     select(-c("src", "dst"))
+zillow_shp <- st_read("../Data/zillow_neighborhoods",     
+        "chicago_zillow_neighborhoods") %>%
+    filter(City=="Chicago" & County=="Cook")
+```
+
+```{r}
 mapview::mapview(routes[c(1,1000, 10000),])
 ```
 
@@ -228,8 +243,142 @@ routes_upper <- routes %>%
 routes <- rbind(routes, routes_upper) %>%
     st_drop_geometry()
 routes <- rbind(routes, own_own)
+#write.csv(routes, file="../Data/commuting_cost.csv")
+```
 
-# arrange routes 
-routes <- arrange(routes, src_id, dst_id)
-write.csv(routes, file="../Data/commuting_cost.csv")
+# Cleaning Zillow data 
+```{r}
+prices <- read.csv("../Data/zhvi.csv")
+zillow_shp <- st_read("../Data/zillow_neighborhoods",     
+        "chicago_zillow_neighborhoods") %>%
+    filter(City=="Chicago" & County=="Cook" & 
+           Name!="O'Hare International Airport" & 
+           Name != "Trumbull Park") %>%
+    mutate(regionid = as.numeric(RegionID))
+prices <- left_join(zillow_shp, prices, by="regionid")
+```
+
+Get all the neighbors
+```{r}
+# get row -> region id crosswalk
+rowname_regionid = data.frame("rowname" = 1:nrow(prices), 
+        "regionid" = prices$regionid)
+
+# this says we want to get only neighbors with SIDES (borders) touching each other 
+neighbors <- st_relate(prices, pattern = "****1****")
+list_neighbors <- list()
+for (i in 1:length(neighbors)) {
+    list_neighbors[[i]] <- data.frame("center_rowname" = rep(i, length(neighbors[[i]])), "neighbor_rowname" = neighbors[[i]])
+}
+neighbors <- rbindlist(list_neighbors)
+neighbors <- neighbors %>%
+    filter(center_rowname!=neighbor_rowname)
+
+names(rowname_regionid) = c("center_rowname", "center_regionid")
+neighbors <- left_join(neighbors, 
+        rowname_regionid, 
+        by="center_rowname")
+names(rowname_regionid) = c("neighbor_rowname", "neighbor_regionid")
+neighbors <- left_join(neighbors, 
+        rowname_regionid, 
+        by="neighbor_rowname") %>%
+    select(regionid = center_regionid, neighbor_regionid)
+
+# get all the neighbors for all region ID with price data
+avg_prices <- left_join(prices, neighbors, 
+        by="regionid", 
+        multiple="all")
+
+# get the neighbor's price in
+neighbor_prices <- prices %>%
+    rename(neighbor_regionid = regionid) %>%
+    st_drop_geometry() %>%
+    select(neighbor_regionid, neighbor_price = home_price)
+avg_prices <- left_join(avg_prices, 
+        neighbor_prices, 
+        by="neighbor_regionid") 
+
+# now compute average prices over all neighbors 
+avg_prices <- avg_prices %>%
+    group_by(regionid) %>%
+    mutate(avg_neighbor_price = mean(neighbor_price, 
+            na.rm=T)) %>%
+    ungroup() %>%
+    mutate(home_price = ifelse(is.na(home_price), avg_neighbor_price, home_price))
+
+# this is the final product: average imputed prices by bordering places
+avg_prices <- avg_prices %>%
+    select(regionid, home_price) %>%
+    st_drop_geometry() %>%
+    unique()
+```
+
+# Final cleaning and output to csv
+
+We need the following csv's:
+
+- commuting_cost.csv: which says the cost of commuting from one neighborhood to another
+- commuting_flow.csv: which tells you how many people are commuting from one neighborhood to another
+- commuting_flow_bytype.csv: which tells you how many people of a certain type (low vs. not-low wage) are commuting
+- location_characteristics.csv: which tells you the location characteristics, which includes:
+    - average prices
+    - number of residents
+    - number of workers
+    - wage offered 
+    - number of low-wage residents
+    - number of high-wage residents
+    - number of low-wage workers 
+    - number of high-wage workers
+
+```{r}
+zillow_shp <- st_read("../Data/zillow_neighborhoods",     
+        "chicago_zillow_neighborhoods") %>%
+    filter((Name=="O'Hare International Airport" |  
+           Name == "Trumbull Park") & County == "Cook") 
+nonid = as.numeric(zillow_shp$RegionID)
+
+# commuting_cost.csv 
+routes <- routes %>%
+    filter(src_id %notin% nonid & dst_id %notin% nonid) %>%
+    arrange(src_id, dst_id)
+write.csv(routes, 
+        file="../Data/commuting_cost.csv", 
+        row.names=FALSE)
+
+# commuting_flow.csv
+comm_flow <- lodes_od %>%
+    select(h_regionid, w_regionid, num_commuting = S000) %>%
+    arrange(h_regionid, w_regionid)
+write.csv(comm_flow, 
+        file = "../Data/commuting_flow.csv",
+        row.names=FALSE)
+
+# commuting_flow_bytype.csv
+comm_flow_type <- lodes_od %>%
+    mutate(num_commuting_hw = SE02 + SE03) %>%
+    select(h_regionid, w_regionid, 
+           num_commuting_lw = SE01, 
+           num_commuting_hw) %>%
+    arrange(h_regionid, w_regionid)
+write.csv(comm_flow_type, 
+    file = "../Data/commuting_flow_bytype.csv",
+    row.names=FALSE)
+```
+
+```{r}
+# commuting flow by csv
+src_wages <- rename(src_wages, w_regionid = h_regionid) %>%
+    select(w_regionid, num_residents, 
+           num_residents_hw, num_residents_lw, 
+           income = wages)
+dst_wages <- dst_wages %>%
+    select(w_regionid, num_employment, 
+           num_employment_lw, num_employment_hw, wages) %>%
+    left_join(., src_wages, by="w_regionid") %>%
+    mutate(regionid = as.numeric(w_regionid)) %>%
+    left_join(., avg_prices, by="regionid") %>%
+    arrange(regionid)
+write.csv(dst_wages, 
+    file = "../Data/location_characteristics.csv",
+    row.names=FALSE)
 ```

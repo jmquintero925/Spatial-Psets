@@ -1,0 +1,59 @@
+```{r}
+library(tidyverse)
+library(sf)
+
+src <- read.csv("../Data/src_wages_residents.csv") %>%
+    rename(w_regionid = h_regionid) %>%
+    select(w_regionid, num_residents)
+dst <- read.csv("../Data/dst_wages_employment.csv") 
+commute <- read.csv("../Data/lodes_od.csv")
+prices <- read.csv("../Data/zhvi.csv") %>%
+    rename(w_regionid = regionid)
+cost <- read.csv("../Data/commuting_cost.csv") %>%
+    rename(h_regionid = src_id,
+           w_regionid = dst_id)
+
+# AREA
+zillow_shp <- st_read("../Data/zillow_neighborhoods",     
+        "chicago_zillow_neighborhoods") %>%
+    filter(City=="Chicago" & County=="Cook")
+zillow_shp <- cbind(zillow_shp, 
+        "nhood_area" = st_area(zillow_shp))
+zillow_shp <- mutate(zillow_shp, 
+        nhood_area = as.numeric(nhood_area),
+        nhood_area = nhood_area / 1000000, 
+        w_regionid = as.numeric(RegionID)) %>%
+        st_drop_geometry()
+
+sample_10 <- prices$w_regionid[1:10]
+
+commute_sample <- commute %>%
+    filter(h_regionid %in% sample_10 & w_regionid %in% sample_10) %>%
+    select(h_regionid, w_regionid, num_commuting = S000) %>%
+    arrange(h_regionid, w_regionid)
+
+cost_sample <- cost %>%
+    filter(h_regionid %in% sample_10 & w_regionid %in% sample_10) %>%
+    select(h_regionid, w_regionid, duration, distance) %>%
+    arrange(h_regionid, w_regionid)
+
+characteristics_sample <- dst %>%
+    filter(w_regionid %in% sample_10)
+
+characteristics_sample <- left_join(characteristics_sample, 
+        src, by="w_regionid") %>%
+    left_join(., prices, by="w_regionid") %>%
+    left_join(., zillow_shp, by="w_regionid") %>%
+    rename(regionid = w_regionid) %>%
+    select(regionid, wages, num_employment, 
+           num_residents, value_2016, nhood_area) %>%
+    mutate(theta = num_employment / (num_employment + num_residents)) %>%
+    arrange(regionid)
+
+
+
+write.csv(commute_sample, file="../Data/commuting_flow_sample.csv")
+write.csv(cost_sample, file="../Data/cost_sample.csv")
+write.csv(characteristics_sample, file="../Data/characteristics_sample.csv")
+
+```

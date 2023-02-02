@@ -5,8 +5,6 @@ format:
         code-fold: true
 ---
 
-# Trumbull Park does not have any associated commuters
-We will drop this neighborhood from now on---so we have 226 neighborhoods.
 ```{r}
 #| echo: false 
 #| warning: false
@@ -14,22 +12,15 @@ We will drop this neighborhood from now on---so we have 226 neighborhoods.
 library(tidyverse)
 library(sf)
 
-src <- read.csv("../Data/src_wages_residents.csv") 
+src <- read.csv("../Data/location_characteristics.csv") 
 zillow_shp <- st_read("../Data/zillow_neighborhoods",     
         "chicago_zillow_neighborhoods") %>%
-    filter(City=="Chicago" & County=="Cook") %>%
-    mutate(h_regionid = as.numeric(RegionID))
+    filter(City=="Chicago" & County=="Cook" & 
+           Name != "O'Hare International Airport" & 
+           Name != "Trumbull Park") %>%
+    mutate(regionid = as.numeric(RegionID))
 
-src <- left_join(zillow_shp, src, by="h_regionid")
-```
-
-```{r}
-#| echo: false 
-#| warning: false
-mapview::mapview(filter(src, is.na(wages)))
-
-src <- src %>%
-    filter(!is.na(wages))
+src <- left_join(zillow_shp, src, by="regionid")
 ```
 
 # Residents and Distribution of Wages Across Origin Neighborhoods
@@ -55,7 +46,7 @@ ggsave("../output/diagnostic_num_residents.pdf")
 #| label: fig-homewages
 #| fig-cap: Distribution of Wages
 ggplot(src) + 
-  geom_sf(aes(fill=wages), color="grey70", lwd=0.1) + 
+  geom_sf(aes(fill=income), color="grey70", lwd=0.1) + 
   scale_fill_distiller(palette = "YlOrBr", na.value = "grey50", 
                        direction=1, name = "Income") + 
   theme_void() +
@@ -69,28 +60,12 @@ ggsave("../output/diagnostic_home_wages.pdf")
 
 # Employment and Distribution of Wages Across Destination Neighborhoods
 
-```{r}
-#| echo: false 
-#| warning: false
-#| output: false 
-dst <- read.csv("../Data/dst_wages_employment.csv") 
-zillow_shp <- st_read("../Data/zillow_neighborhoods",     
-        "chicago_zillow_neighborhoods") %>%
-    filter(City=="Chicago" & County=="Cook") %>%
-    mutate(w_regionid = as.numeric(RegionID))
-
-dst <- left_join(zillow_shp, dst, by="w_regionid")
-
-dst <- dst %>%
-    filter(!is.na(wages))
-```
-
 @fig-employment shows the number of employees in a certain neighborhood, calculated as the total number of people who are commuting to the neighborhood as a destination. Note that without the log, the loop is very concentrated. This is for aesthetic reasons. @fig-workwages shows the distribution of average wage earned in a particular neighborhood. Clearly, the distribution of the "quality" of jobs are very different compared to the distribution of the "income." While the range here is larger, the concentration of income along the Northeast of Chicago in @fig-homewages is stark.
 
 ```{r}
 #| label: fig-employment
 #| fig-cap: Number of Employees
-ggplot(dst) + 
+ggplot(src) + 
   geom_sf(aes(fill=log(num_employment)), color="grey70", lwd=0.1) + 
   scale_fill_distiller(palette = "YlOrBr", na.value = "grey50", 
                        direction=1, name = "Log(Employment)") + 
@@ -106,7 +81,7 @@ ggsave("../output/diagnostic_num_employment.pdf")
 ```{r}
 #| label: fig-workwages
 #| fig-cap: Distribution of Wages At Employment
-ggplot(dst) + 
+ggplot(src) + 
   geom_sf(aes(fill=wages), color="grey70", lwd=0.1) + 
   scale_fill_distiller(palette = "YlOrBr", na.value = "grey50", 
                        direction=1, 
@@ -119,18 +94,46 @@ ggplot(dst) +
 ggsave("../output/diagnostic_work_wages.pdf")
 ```
 
+# Home Prices
+
+@fig-houseprices shows the distribution of residential house price index. Clearly, the northside has the advantage in residential house prices. Notice that the southwest is particularly cheap. 
+
+```{r}
+#| label: fig-houseprices
+#| fig-cap: Distribution of House Prices
+ggplot(src) + 
+  geom_sf(aes(fill=home_price), color="grey70", lwd=0.1) + 
+  scale_fill_distiller(palette = "YlOrBr", na.value = "grey50", 
+                       direction=1, 
+                       name = "Zillow House Price Index") + 
+  theme_void() +
+  theme(legend.position = "bottom", legend.box="horizontal",
+        legend.key.width = unit(1.5, "cm")) + 
+  guides(fill = guide_colorbar(title.position="top", 
+                                     title.hjust =0.5))
+ggsave("../output/diagnostic_prices.pdf")
+```
+
 # Commuting gravity
-Consider the gravity of people commuting to the loop, which is indexed by the neighborhood ID of 269593. For fun, Hyde Park is 269586. 
+Consider the gravity of people commuting to the loop, which is indexed by the neighborhood ID of 269593. For fun, Hyde Park is 269586. East Hyde Park is 403352. We calculate commuting probability relative to home census tract (the share of commuters commuting to each destination).
 
 ```{r}
 #| echo: false 
 #| warning: false 
 #| output: false
 
-commute <- read.csv("../Data/lodes_od.csv")
+commute <- read.csv("../Data/commuting_flow.csv") %>%
+    group_by(h_regionid) %>%
+    mutate(tot_commute_from_origin = sum(num_commuting)) %>%
+    ungroup() %>%
+    mutate(share_commuters = num_commuting / 
+                tot_commute_from_origin)
+
 zillow_shp <- st_read("../Data/zillow_neighborhoods",     
         "chicago_zillow_neighborhoods") %>%
-    filter(City=="Chicago" & County=="Cook") %>%
+    filter(City=="Chicago" & County=="Cook" & 
+           Name != "O'Hare International Airport" & 
+           Name != "Trumbull Park") %>%
     mutate(h_regionid = as.numeric(RegionID))
 
 loop_commute <- commute %>%
@@ -142,6 +145,12 @@ hp_commute <- commute %>%
     filter(w_regionid == 269586) %>%
     left_join(., zillow_shp, by="h_regionid") %>%
     st_as_sf()
+
+ehp_commute <- commute %>%
+    filter(w_regionid == 403352) %>%
+    left_join(., zillow_shp, by="h_regionid") %>%
+    st_as_sf()
+
 
 cost <- read.csv("../Data/commuting_cost.csv") %>%
     rename(h_regionid = src_id)
@@ -156,6 +165,10 @@ hp_cost <- cost %>%
     left_join(., zillow_shp, by="h_regionid") %>%
     st_as_sf()
 
+ehp_cost <- cost %>%
+    filter(dst_id == 403352) %>%
+    left_join(., zillow_shp, by="h_regionid") %>%
+    st_as_sf()
 
 ```
 
@@ -234,7 +247,7 @@ ggplot(hp_cost) +
         legend.key.width = unit(1.5, "cm")) + 
   guides(fill = guide_colorbar(title.position="top", 
                                      title.hjust =0.5))
-ggsave("../output/diagnostic_loop_commutingcost.pdf")
+ggsave("../output/diagnostic_hp_commutingcost.pdf")
 
 ggplot(hp_cost) + 
   geom_sf(aes(fill=distance), color="grey70", lwd=0.1) + 
@@ -246,9 +259,51 @@ ggplot(hp_cost) +
         legend.key.width = unit(1.5, "cm")) + 
   guides(fill = guide_colorbar(title.position="top", 
                                      title.hjust =0.5))
-ggsave("../output/diagnostic_loop_commutingcost_distance.pdf")
+ggsave("../output/diagnostic_hp_commutingcost_distance.pdf")
 
 ```
+
+What about East Hyde Park?
+
+```{r}
+ggplot(ehp_commute) + 
+  geom_sf(aes(fill=share_commuters), color="grey70", lwd=0.1) + 
+  scale_fill_distiller(palette = "YlOrBr", na.value = "grey50", 
+                       direction=1, 
+                       name = "Commuting Probability") + 
+  theme_void() +
+  theme(legend.position = "bottom", legend.box="horizontal",
+        legend.key.width = unit(1.5, "cm")) + 
+  guides(fill = guide_colorbar(title.position="top", 
+                                     title.hjust =0.5))
+ggsave("../output/diagnostic_ehp_commutingprob.pdf")
+
+ggplot(ehp_cost) + 
+  geom_sf(aes(fill=duration), color="grey70", lwd=0.1) + 
+  scale_fill_distiller(palette = "YlOrBr", na.value = "grey50", 
+                       direction=1, 
+                       name = "Driving Time") + 
+  theme_void() +
+  theme(legend.position = "bottom", legend.box="horizontal",
+        legend.key.width = unit(1.5, "cm")) + 
+  guides(fill = guide_colorbar(title.position="top", 
+                                     title.hjust =0.5))
+ggsave("../output/diagnostic_ehp_commutingcost.pdf")
+
+ggplot(ehp_cost) + 
+  geom_sf(aes(fill=distance), color="grey70", lwd=0.1) + 
+  scale_fill_distiller(palette = "YlOrBr", na.value = "grey50", 
+                       direction=1, 
+                       name = "Driving Distance") + 
+  theme_void() +
+  theme(legend.position = "bottom", legend.box="horizontal",
+        legend.key.width = unit(1.5, "cm")) + 
+  guides(fill = guide_colorbar(title.position="top", 
+                                     title.hjust =0.5))
+ggsave("../output/diagnostic_ehp_commutingcost_distance.pdf")
+
+```
+
 
 For exploration:
 ```{r}
