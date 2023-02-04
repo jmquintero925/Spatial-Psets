@@ -304,6 +304,181 @@ ggsave("../output/diagnostic_ehp_commutingcost_distance.pdf")
 
 ```
 
+```{r}
+#| output: false
+#| echo: false
+
+blah <- src %>%
+      mutate(percentile = round(percent_rank(income) * 100, digits =2)) %>%
+      filter(regionid==403352 | regionid==138261)
+
+```
+
+East Hyde Park is in the `r mean(blah[blah$regionid==403352, ]$percentile)`th percentile of the income distribution while Englewood is in the `r mean(blah[blah$regionid==138261, ]$percentile)`th percentile of the income distribution.
+
+# Where do people from Englewood commute to?
+
+```{r}
+zillow_shp <- zillow_shp %>%
+      rename(w_regionid = h_regionid)
+
+englewood_commute <- commute %>%
+    filter(h_regionid == 138261) %>%
+    left_join(., zillow_shp, by="w_regionid") %>%
+    st_as_sf()
+
+ggplot(englewood_commute) + 
+  geom_sf(aes(fill=share_commuters), color="grey70", lwd=0.1) + 
+  scale_fill_distiller(palette = "YlOrBr", na.value = "grey50", 
+                       direction=1, 
+                       name = "Commuting Probability") + 
+  theme_void() +
+  theme(legend.position = "bottom", legend.box="horizontal",
+        legend.key.width = unit(1.5, "cm")) + 
+  guides(fill = guide_colorbar(title.position="top", 
+                                     title.hjust =0.5))
+ggsave("../output/diagnostic_englewood_src_commutingprob.pdf")
+```
+
+```{r}
+blah <- read.csv("../Data/commuting_flow_bytype.csv") %>%
+      group_by(h_regionid) %>%
+      summarize(lw = sum(num_commuting_lw),
+                hw = sum(num_commuting_hw)) %>%
+      mutate(slw = lw / (lw + hw),
+             ranking = desc(row_number(slw)) + 226)
+```
+
+`r round(mean(blah[blah$h_regionid==138261, ]$slw) * 100, 2)` of the commutes in Englewood are commutes to low-wage jobs (<1500 a month). This ranks `r mean(blah[blah$h_regionid==138261, ]$ranking)`th across all neighborhoods.
+
+# Where do people from East Hyde Park commute to?
+```{r}
+ehp_commute <- commute %>%
+    filter(h_regionid == 403352) %>%
+    left_join(., zillow_shp, by="w_regionid") %>%
+    st_as_sf()
+
+ggplot(ehp_commute) + 
+  geom_sf(aes(fill=share_commuters), color="grey70", lwd=0.1) + 
+  scale_fill_distiller(palette = "YlOrBr", na.value = "grey50", 
+                       direction=1, 
+                       name = "Commuting Probability") + 
+  theme_void() +
+  theme(legend.position = "bottom", legend.box="horizontal",
+        legend.key.width = unit(1.5, "cm")) + 
+  guides(fill = guide_colorbar(title.position="top", 
+                                     title.hjust =0.5))
+ggsave("../output/diagnostic_ehp_src_commutingprob.pdf")
+```
+
+`r round(mean(blah[blah$h_regionid==403352, ]$slw) * 100, digits=2)` of the commutes in East Hyde Park are commutes to low-wage jobs (<1500 a month). This ranks `r mean(blah[blah$h_regionid==403352, ]$ranking)`th across all neighborhoods.
+
+# Where do people from Lincoln Park commute to?
+
+```{r}
+lp_commute <- commute %>%
+    filter(h_regionid == 269590) %>%
+    left_join(., zillow_shp, by="w_regionid") %>%
+    st_as_sf()
+
+ggplot(lp_commute) + 
+  geom_sf(aes(fill=share_commuters), color="grey70", lwd=0.1) + 
+  scale_fill_distiller(palette = "YlOrBr", na.value = "grey50", 
+                       direction=1, 
+                       name = "Commuting Probability") + 
+  theme_void() +
+  theme(legend.position = "bottom", legend.box="horizontal",
+        legend.key.width = unit(1.5, "cm")) + 
+  guides(fill = guide_colorbar(title.position="top", 
+                                     title.hjust =0.5))
+ggsave("../output/diagnostic_lp_src_commutingprob.pdf")
+```
+
+`r round(mean(blah[blah$h_regionid==269590, ]$slw) * 100, digits = 2)` of the commutes in Lincoln Park are commutes to low-wage jobs (<1500 a month). This ranks `r mean(blah[blah$h_regionid==269590, ]$ranking)`th across all neighborhoods.
+
+# These are remarkably similar: all of the gravity in Chicago in terms of commuting probability is in downtown. What kind of jobs come from where? 
+
+```{r}
+#| echo: false 
+#| output: false
+
+zillow_shp <- st_read("../Data/zillow_neighborhoods",     
+        "chicago_zillow_neighborhoods") %>%
+    filter(City=="Chicago" & County=="Cook" & 
+           Name != "O'Hare International Airport" & 
+           Name != "Trumbull Park") %>%
+    mutate(h_regionid = as.numeric(RegionID))
+
+```
+```{r}
+#zillow_shp <- zillow_shp %>%
+#      rename(h_regionid = w_regionid)
+
+commute_by_type <- read.csv("../Data/commuting_flow_bytype.csv") %>%
+    group_by(w_regionid) %>%
+    mutate(total_commute = sum(num_commuting_lw + num_commuting_hw),
+           total_commute_lw = sum(num_commuting_lw)) %>%
+    ungroup() %>%
+    mutate(share_low_wage_commuters = num_commuting_lw / 
+                total_commute_lw)
+loop_lw <- commute_by_type %>%
+    filter(w_regionid == 269593) %>%
+    left_join(., zillow_shp, by="h_regionid") %>%
+    st_as_sf()
+
+```
+
+@fig-shareloop_lowwage_commute shows the commuting origins of low-wage workers in the loop.
+
+```{r}
+#| label: fig-shareloop_lowwage_commute
+#| fig-cap: Low-wage Commuters to the Loop
+
+ggplot(loop_lw) + 
+  geom_sf(aes(fill=share_low_wage_commuters), color="grey70", lwd=0.1) + 
+  scale_fill_distiller(palette = "YlOrBr", na.value = "grey50", 
+                       direction=1, 
+                       name = "Commuting Probability") + 
+  theme_void() +
+  theme(legend.position = "bottom", legend.box="horizontal",
+        legend.key.width = unit(1.5, "cm")) + 
+  guides(fill = guide_colorbar(title.position="top", 
+                                     title.hjust =0.5))
+ggsave("../output/diagnostic_loop_lw_commutingprob.pdf")
+```
+
+# More generally, where do these low wage workers come from in the city? 
+
+@fig-sharelowtypebyhome shows that the low-wage workers in Chicago come disproportinately from the south and southwest of Chicago. 
+
+
+```{r}
+blah <- read.csv("../Data/commuting_flow_bytype.csv") %>%
+      group_by(h_regionid) %>%
+      summarize(lw = sum(num_commuting_lw),
+                hw = sum(num_commuting_hw)) %>%
+      mutate(slw = lw / (lw + hw),
+             ranking = desc(row_number(slw)) + 226) %>%
+      left_join(., zillow_shp, by='h_regionid') %>%
+      st_as_sf()
+```
+
+```{r}
+#| label: fig-sharelowtypebyhome
+#| fig-cap: Share of Commuters that Earn Low Wages
+ggplot(blah) + 
+  geom_sf(aes(fill=slw), color="grey70", lwd=0.1) + 
+  scale_fill_distiller(palette = "YlOrBr", na.value = "grey50", 
+                       direction=1, 
+                       name = "Share of Commuters that are Low-Wage") + 
+  theme_void() +
+  theme(legend.position = "bottom", legend.box="horizontal",
+        legend.key.width = unit(1.5, "cm")) + 
+  guides(fill = guide_colorbar(title.position="top", 
+                                     title.hjust =0.5))
+ggsave("../output/diagnostic_city_share_lw.pdf")
+
+```
 
 For exploration:
 ```{r}
