@@ -5,8 +5,8 @@
 %% Housekeeping and parameters
 clear all; clc; close all; 
 
-path.figs = '../../Figures/';
-path.tabs = '../../Tables/';
+path.figs = '../../Figures/Single Agent/';
+path.tabs = '../../Tables/Single Agent/';
 
 % Only works in Jose's computer. To format figures how I like it. 
 try
@@ -96,7 +96,7 @@ geobasemap('none')
 grid('off')
 cb = colorbar;
 set(gca,'ColorScale','log')
-export_fig(strcat(path.figs,'theta_dist'),'-pdf','-transparent'); 
+export_fig(strcat(path.figs,'Baseline/theta_dist'),'-pdf','-transparent'); 
 
 % Local Productivity
 figure; 
@@ -105,7 +105,7 @@ geobasemap('none')
 grid('off')
 cb = colorbar;
 set(gca,'ColorScale','log')
-export_fig(strcat(path.figs,'prod'),'-pdf','-transparent'); 
+export_fig(strcat(path.figs,'Baseline/prod'),'-pdf','-transparent'); 
 
 
 % Local Productivity (Unadjusted)
@@ -114,7 +114,7 @@ geoplot(chicago_eq,ColorVariable="Araw")
 geobasemap('none')
 grid('off')
 cb = colorbar;
-export_fig(strcat(path.figs,'prod_raw'),'-pdf','-transparent'); 
+export_fig(strcat(path.figs,'Baseline/prod_raw'),'-pdf','-transparent'); 
 
 % Local Amenities
 figure; 
@@ -123,7 +123,7 @@ geobasemap('none')
 grid('off')
 cb = colorbar;
 set(gca,'ColorScale','log')
-export_fig(strcat(path.figs,'amenities'),'-pdf','-transparent'); 
+export_fig(strcat(path.figs,'Baseline/amenities'),'-pdf','-transparent'); 
 
 
 % Local (Endogenous) Amenities
@@ -133,7 +133,7 @@ geobasemap('none')
 grid('off')
 cb = colorbar;
 set(gca,'ColorScale','log')
-export_fig(strcat(path.figs,'eAmenities'),'-pdf','-transparent'); 
+export_fig(strcat(path.figs,'Baseline/eAmenities'),'-pdf','-transparent'); 
 
 
 % Density of development
@@ -143,18 +143,18 @@ geobasemap('none')
 grid('off')
 cb = colorbar;
 set(gca,'ColorScale','log')
-export_fig(strcat(path.figs,'varphi'),'-pdf','-transparent'); 
+export_fig(strcat(path.figs,'Baseline/varphi'),'-pdf','-transparent'); 
 
 
-%% Counterfactual exercise
+%% Counterfactual exercise (Fixing population)
 
 % Create full equilibrium object
 eq = join(base_eq,data);
 
 % Perturbate parameters
-eq.A(id(1)) = eq.A(id(1))*2;
-eq.b(id(1)) = eq.b(id(1))*2;
-eq.B(id(1)) = eq.B(id(1))*2;
+eq.A(id(1)) = eq.A(id(1)) + 0.5*std(eq.A);
+eq.b(id(1)) = eq.b(id(1)) + 2*std(eq.b);
+eq.B(id(1)) = eq.B(id(1)) + 2*std(eq.B);
 
 % Solve new equilibrium
 eq_new = auxFuncs.countAgg(par,eq,d_mat,true,true);
@@ -176,15 +176,13 @@ end
 eq_new = join(chicago,eq_new,"LeftKeys","RegionID","RightKeys","regionid");
 
 
-%% Create maps
-
 % Wages
 figure; 
 geoplot(eq_new,ColorVariable="omega")
 geobasemap('none')
 grid('off')
 cb = colorbar;
-export_fig(strcat(path.figs,'Counterfactual/wages'),'-pdf','-transparent'); 
+export_fig(strcat(path.figs,'Counterfactual/Fix Population/wages'),'-pdf','-transparent'); 
 
 
 % Amenities
@@ -193,7 +191,7 @@ geoplot(eq_new,ColorVariable="B")
 geobasemap('none')
 grid('off')
 cb = colorbar;
-export_fig(strcat(path.figs,'Counterfactual/ammenities'),'-pdf','-transparent'); 
+export_fig(strcat(path.figs,'Counterfactual/Fix Population/ammenities'),'-pdf','-transparent'); 
 
 % Floor distribution
 figure; 
@@ -201,7 +199,7 @@ geoplot(eq_new,ColorVariable="floorDist")
 geobasemap('none')
 grid('off')
 cb = colorbar;
-export_fig(strcat(path.figs,'Counterfactual/comFloor'),'-pdf','-transparent'); 
+export_fig(strcat(path.figs,'Counterfactual/Fix Population/comFloor'),'-pdf','-transparent'); 
 
 % Employment
 figure; 
@@ -209,7 +207,7 @@ geoplot(eq_new,ColorVariable="num_employment_eq_new")
 geobasemap('none')
 grid('off')
 cb = colorbar;
-export_fig(strcat(path.figs,'Counterfactual/workers'),'-pdf','-transparent'); 
+export_fig(strcat(path.figs,'Counterfactual/Fix Population/workers'),'-pdf','-transparent'); 
 
 % Residents
 figure; 
@@ -217,7 +215,7 @@ geoplot(eq_new,ColorVariable="num_residents_eq_new")
 geobasemap('none')
 grid('off')
 cb = colorbar;
-export_fig(strcat(path.figs,'Counterfactual/residents'),'-pdf','-transparent'); 
+export_fig(strcat(path.figs,'Counterfactual/Fix Population/residents'),'-pdf','-transparent'); 
 
 % Housing
 figure; 
@@ -225,6 +223,84 @@ geoplot(eq_new,ColorVariable="home_price_eq_new")
 geobasemap('none')
 grid('off')
 cb = colorbar;
-export_fig(strcat(path.figs,'Counterfactual/housing'),'-pdf','-transparent'); 
+export_fig(strcat(path.figs,'Counterfactual/Fix Population/housing'),'-pdf','-transparent'); 
 
+
+%% Counterfactual exercise (Fixing utility)
+
+% Create full equilibrium object
+eq = join(base_eq,data);
+
+% Perturbate parameters
+eq.A(id(1)) = eq.A(id(1)) + 0.5*std(eq.A);
+eq.b(id(1)) = eq.b(id(1)) + 2*std(eq.b);
+eq.B(id(1)) = eq.B(id(1)) + 2*std(eq.B);
+
+% Solve new equilibrium
+eq_new = auxFuncs.countAgg(par,eq,d_mat,true,false);
+
+% Columns for change
+chng = [2,5,10,14,18,22];
+names = eq_new.Properties.VariableNames;
+
+
+% Calculate percentual change
+pChng = table2array(eq_new(:,chng))./table2array(eq(:,chng))-1;
+% Add to table for specific variables
+for j= 1:length(chng)
+    eq_new.(names{chng(j)})  = pChng(:,j);
+end
+
+% Paste shapefile
+eq_new = join(chicago,eq_new,"LeftKeys","RegionID","RightKeys","regionid");
+
+
+% Wages
+figure; 
+geoplot(eq_new,ColorVariable="omega")
+geobasemap('none')
+grid('off')
+cb = colorbar;
+export_fig(strcat(path.figs,'Counterfactual/Fix utility/wages'),'-pdf','-transparent'); 
+
+
+% Amenities
+figure; 
+geoplot(eq_new,ColorVariable="B")
+geobasemap('none')
+grid('off')
+cb = colorbar;
+export_fig(strcat(path.figs,'Counterfactual/Fix utility/ammenities'),'-pdf','-transparent'); 
+
+% Floor distribution
+figure; 
+geoplot(eq_new,ColorVariable="floorDist")
+geobasemap('none')
+grid('off')
+cb = colorbar;
+export_fig(strcat(path.figs,'Counterfactual/Fix utility/comFloor'),'-pdf','-transparent'); 
+
+% Employment
+figure; 
+geoplot(eq_new,ColorVariable="num_employment_eq_new")
+geobasemap('none')
+grid('off')
+cb = colorbar;
+export_fig(strcat(path.figs,'Counterfactual/Fix utility/workers'),'-pdf','-transparent'); 
+
+% Residents
+figure; 
+geoplot(eq_new,ColorVariable="num_residents_eq_new")
+geobasemap('none')
+grid('off')
+cb = colorbar;
+export_fig(strcat(path.figs,'Counterfactual/Fix utility/residents'),'-pdf','-transparent'); 
+
+% Housing
+figure; 
+geoplot(eq_new,ColorVariable="home_price_eq_new")
+geobasemap('none')
+grid('off')
+cb = colorbar;
+export_fig(strcat(path.figs,'Counterfactual/Fix utility/housing'),'-pdf','-transparent'); 
 

@@ -235,12 +235,10 @@ classdef    auxFuncs
                 % Save population
                 new(1) = tPop;
                 % Save utility
-                new(2) = (Phi^(1/par.theta))*par.gammaAdj;    
+                new(2) = Phi
+    
             else
-                % Save population
-                new(1) = tPop;
-                % Save utility
-                new(2) = 1; 
+
             end
         end
     
