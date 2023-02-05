@@ -123,6 +123,114 @@ classdef    auxFuncs
         function par = gravityTheta(par,flows)
             
         end
+        % Function that solves the fix point for the counterfactual
+        % Fixed amenities
+        function out = countAgg(par,eq,d_mat,agg,pop)
+            % Initial population
+            init_pop = sum(eq.num_employment);
+            % Unpack endogenous objects
+            Q           = eq.home_price;
+            wage        = eq.omega;
+            floorDist   = eq.floorDist;
+            % Fixed objects
+            b           = eq.b*agg+eq.B*(~agg);
+            varphi      = eq.varphi;
+            land        = eq.land;
+            K           = land.^(1-par.mu);
+            % Unpack objects that will change over the loop
+            A = eq.A;
+            B = eq.B;
+            % Define toelrance and parameter of adjustment
+            tol = 1e-06;
+            adj = 0.5;
+            % Create matrix of commuting costs adjusted by elasticity
+            dij = exp(-par.theta*par.kappa*d_mat);
+            % Begin fix point routine
+            Delta = 10;
+            counter = 0;
+            flag    = true;
+            tic;
+            while(Delta>tol)
+                % Counter
+                counter = counter +1;
+                % Big Matrix of latent utilities (adjusted)
+                Phi_ij = dij.*((B.*(wage'))./(Q.^(1-par.beta))).^par.theta;
+                % Get sum of all utilities
+                Phi = sum(Phi_ij,"all");
+                % Probabilities (unconditional)
+                pi_ij = Phi_ij/Phi;
+                % Probabilities (conditional)
+                pi_ij_i = dij.*(wage').^par.theta;
+                pi_ij_i = pi_ij_i./sum(pi_ij_i,2);
+                % Tricky part: Get the total population. 
+                % Depends on what you are fixing
+                tPop = init_pop*(pop) + Phi*(~pop);
+                % Compute workers and residents
+                workers  = tPop*sum(pi_ij,1)';
+                resident = tPop*sum(pi_ij,2);
+                % Production
+                Y = A.*(workers.^par.alpha).*(floorDist.*varphi.*K).^(1-par.alpha);
+                % Workers income
+                v = sum(pi_ij_i.*(wage'),2);
+                % Update endogenous objects
+                % Wages
+                wage_hat = par.alpha*Y./workers;
+                % Price of land
+                q    = ((1-par.alpha)*Y+(1-par.beta)*v.*resident)./(varphi.*K);
+                idx = (A>0 & B==0);
+                q(idx) = (1-par.alpha).*Y(idx)./(floorDist(idx).*varphi(idx).*K(idx));
+                idx = A==0 & B>0;
+                q(idx) = ((1-par.beta).*v(idx).*resident(idx))./((1-floorDist(idx)).*varphi(idx).*K(idx));
+                % Floor distribution
+                f_hat = ((1-par.alpha)*Y)./(q.*varphi.*K);
+                f_hat(A>0 & B==0) = 1;
+                f_hat(A==0 & B>0) = 0;
+                % Update B if agglomerations are endogenous
+                if(agg)
+                    % Get new Omega
+                    Omega = exp(-par.rho*d_mat)*(resident./land);
+                    % Get new amenities
+                    B = b.*(Omega.^par.eta);
+                end
+                % Calculate differences
+                Delta = max(max([(wage-wage_hat),(Q-q),(floorDist-f_hat)].^2));
+                % Update guesses
+                new = [[wage,wage_hat];[Q,q];[floorDist,f_hat]]*[adj;1-adj];
+                % Unpack new wages
+                idx  = 1:par.N;
+                wage = new(idx);
+                % New housing prices
+                idx  = idx + par.N; 
+                Q    = new(idx);
+                % New floor distribution
+                idx  = idx + par.N; 
+                floorDist = new(idx);
+                % Give an exit
+                if(counter==5e3)
+                    flag = false;
+                    break;
+                end
+            end
+            time = toc;
+            % Message for when finish the fix point
+            if(flag)
+                % Display amount of time and iterations
+                fprintf('Fix Point solved. Time elapsed %2.2f seconds in %5i iterations .\n',time,counter);
+            else
+                error('Fix point not solved. Check for tolerance');
+            end
+            % Save object in table
+            out = eq;
+            out.B = B;
+            out.floorDist = floorDist;
+            out.num_employment = workers;
+            out.num_residents  = resident;
+            out.omega = wage;
+            out.home_price = Q;
+            if(agg)
+                out.Omega = Omega;
+            end
+        end
     
     end
 end

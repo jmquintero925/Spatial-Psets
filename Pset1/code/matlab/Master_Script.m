@@ -148,8 +148,83 @@ export_fig(strcat(path.figs,'varphi'),'-pdf','-transparent');
 
 %% Counterfactual exercise
 
+% Create full equilibrium object
+eq = join(base_eq,data);
+
+% Perturbate parameters
+eq.A(id(1)) = eq.A(id(1))*2;
+eq.b(id(1)) = eq.b(id(1))*2;
+eq.B(id(1)) = eq.B(id(1))*2;
+
+% Solve new equilibrium
+eq_new = auxFuncs.countAgg(par,eq,d_mat,true,true);
+
+% Columns for change
+chng = [2,5,10,14,18,22];
+names = eq_new.Properties.VariableNames;
+
+names(chng)
+
+% Calculate percentual change
+pChng = table2array(eq_new(:,chng))./table2array(eq(:,chng))-1;
+% Add to table for specific variables
+for j= 1:length(chng)
+    eq_new.(names{chng(j)})  = pChng(:,j);
+end
+
+% Paste shapefile
+eq_new = join(chicago,eq_new,"LeftKeys","RegionID","RightKeys","regionid");
 
 
+%% Create maps
 
+% Wages
+figure; 
+geoplot(eq_new,ColorVariable="omega")
+geobasemap('none')
+grid('off')
+cb = colorbar;
+export_fig(strcat(path.figs,'Counterfactual/wages'),'-pdf','-transparent'); 
+
+
+% Amenities
+figure; 
+geoplot(eq_new,ColorVariable="B")
+geobasemap('none')
+grid('off')
+cb = colorbar;
+export_fig(strcat(path.figs,'Counterfactual/ammenities'),'-pdf','-transparent'); 
+
+% Floor distribution
+figure; 
+geoplot(eq_new,ColorVariable="floorDist")
+geobasemap('none')
+grid('off')
+cb = colorbar;
+export_fig(strcat(path.figs,'Counterfactual/comFloor'),'-pdf','-transparent'); 
+
+% Employment
+figure; 
+geoplot(eq_new,ColorVariable="num_employment_eq_new")
+geobasemap('none')
+grid('off')
+cb = colorbar;
+export_fig(strcat(path.figs,'Counterfactual/workers'),'-pdf','-transparent'); 
+
+% Residents
+figure; 
+geoplot(eq_new,ColorVariable="num_residents_eq_new")
+geobasemap('none')
+grid('off')
+cb = colorbar;
+export_fig(strcat(path.figs,'Counterfactual/residents'),'-pdf','-transparent'); 
+
+% Housing
+figure; 
+geoplot(eq_new,ColorVariable="home_price_eq_new")
+geobasemap('none')
+grid('off')
+cb = colorbar;
+export_fig(strcat(path.figs,'Counterfactual/housing'),'-pdf','-transparent'); 
 
 
