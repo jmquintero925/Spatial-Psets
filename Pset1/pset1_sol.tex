@@ -42,7 +42,7 @@ A household is characterized by the neighborhood where she resides $i$ and where
 \end{equation}
 Following the trade literature, we assume that the shock is distributed Fréchet 
 \begin{align*}
-    \textcolor{blue}{F(s_{ij})} &\textcolor{blue}{= e^{\lambda_{ij}s_{ij}^{-\theta}}} & \textcolor{red}{F(s_{ij})} &\textcolor{red}{= e^{\lambda^o_{i}\lambda^d_js_{ij}^{-\theta}}}
+    F(s_{ij}) &= e^{\lambda^o_{i}\lambda^d_js_{ij}^{-\theta}}
 \end{align*}
 with $\theta>0$. 
 The budget restriction for the agent is 
@@ -136,7 +136,42 @@ For this section, we borrow the structure from the Berlin paper. Let $\theta_j$ 
 Following the standard assumptions of urban models, floor space is supplied by competitive landlords. 
 
 \subsection{Extension: Two types}
-Now consider there are two types of agents that are imperfect substitutes to the firm. Specifically, the firm combines them with a Cobb-Douglas technology with 
-
+We now consider a version where there are two types of agents $m\in\{s,u\}$. Let $\delta=\Pr\left(m=s\right)$. Also, assume that the type of the agent is independent from the preference shock. We assume both types of agents are required for production and they are imperfect substitutes. Specifically, we now assume the firms production function is 
+\begin{equation*}
+    Y_j = A_j L_j^\alpha H_j^{1-\alpha}\quad\text{s.t}\quad L_j = L_{js}^\psi L_{ju}^{1-\psi}
+\end{equation*}
+Then the full problem of the firm is 
+\begin{equation*}
+    \max_{L_{sj},L_{uj},H_j}  A_j L_j^\alpha H_j^{1-\alpha}-w_sL_{sj}-w_uL_{uj}-q_j^pH_j^p\quad\text{s.t}\quad L_j = L_{js}^\psi L_{ju}^{1-\psi}
+\end{equation*}
+Consider again the normalized version of the problem. For now I dropped the location subindex and later brought it back again. The FOCs are 
+\begin{align*}
+    [\ell_s]&: & w_s&= A\alpha\left[\left(\frac{\ell_s}{\ell_u}\right)^{\psi}\ell_u\right]^{\alpha-1}\psi \left(\frac{\ell_u}{\ell_s}\right)^{1-\psi}  & \\ 
+    [\ell_u]&: & w_u&= A\alpha\left[\left(\frac{\ell_s}{\ell_u}\right)^{\psi}\ell_u\right]^{\alpha-1}(1-\psi) \left(\frac{\ell_u}{\ell_s}\right)^{-\psi} &
+\end{align*}
+Combining both FOCs, it follows that
+\begin{equation*}
+    \frac{\ell_u}{\ell_s} = \underbrace{\frac{w_s}{w_u}\frac{1-\psi}{\psi}}_{\Gamma}
+\end{equation*}
+The previous equation gives some interesting intuition as the wage premium depends on the price elasticity of each type of labor, governed by $\psi$ and the relative demand. Moreover, the relative demand is constrained within a location which allows for solving for the quantities of labor for each type. By plugging back into the FOC it follows that 
+\begin{equation*}
+    \ell_u = \left(A\alpha\right)^{\frac{1}{1-\alpha}}\left(\frac{\psi}{w_s}\right)^{\frac{\alpha\psi}{1-\alpha}} \left(\frac{1-\psi}{w_u}\right)^{\frac{1-\psi\alpha}{1-\alpha}}
+\end{equation*}
+Similarly, 
+\begin{equation*}
+    \ell_s = \left(A\alpha\right)^{\frac{1}{1-\alpha}}\left(\frac{\psi}{w_s}\right)^{\frac{1-\alpha(1-\psi)}{1-\alpha}} \left(\frac{1-\psi}{w_u}\right)^{\frac{\alpha(1-\psi)}{1-\alpha}}
+\end{equation*}
+and 
+\begin{equation*}
+    \ell = (A\alpha)^{\frac{1}{1-\alpha}}\left(\frac{\psi}{w_s}\right)^{\frac{\psi}{1-\alpha}}\left(\frac{1-\psi}{w_u}\right)^{\frac{1-\psi}{1-\alpha}}
+\end{equation*}
+Note that first-order conditions imply that 
+\begin{equation*}
+    w_s\ell_s +  w_u\ell_u = A\alpha\ell^\alpha
+\end{equation*}
+Then using the zero profit conditions, the price for land is 
+\begin{equation*}
+    q_i^p = A_i(1-\alpha)\ell_i^\alpha = A_i(1-\alpha)\left[A_i\alpha\left(\frac{\psi}{w_s}\right)^{\psi}\left(\frac{1-\psi}{w_u}\right)^{1-\psi}\right]^{\frac{\alpha}{1-\alpha}}
+\end{equation*}
 
 \end{document}
