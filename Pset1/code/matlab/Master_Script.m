@@ -88,62 +88,120 @@ base_eq = auxFuncs.invModel(par,data,d_mat,base_eq);
 % Create data base to analyze equilibrium objects
 chicago_eq = join(chicago,base_eq,"LeftKeys","RegionID","RightKeys","regionid");
 
+% Create a variable for land developed
+chicago_eq.land_dev = chicago_eq.varphi.*(chicago_eq.land_base_eq.^(1-par.mu));
+
+% Columns for change
+chng = [23,24,28,29,31,32];
+names = chicago_eq.Properties.VariableNames;
+
+
+% Add to table for specific variables
+for j= 1:length(chng)
+    % Standarize variables for presentation
+    chicago_eq.(names{chng(j)})  = normalize(chicago_eq.(names{chng(j)}));
+end
+
+
 
 % Comercial land distribution
 figure; 
-geoplot(chicago_eq,ColorVariable="floorDist")
+gx =geoaxes;
+geoplot(chicago_eq,ColorVariable="floorDist");
 geobasemap('none')
 grid('off')
+gx.FontSize = 12;
+gx.FontName = 'CMU Serif';
+gx.ZoomLevel = 10.84;
+gx.LatitudeLabel.FontSize = 15;
+gx.LongitudeLabel.FontSize = 15;
 cb = colorbar;
-set(gca,'ColorScale','log')
+cb.FontSize = 12;
+clim([-1.5,1.5])
 export_fig(strcat(path.figs,'Baseline/theta_dist'),'-pdf','-transparent'); 
 
 % Local Productivity
 figure; 
+gx =geoaxes;
 geoplot(chicago_eq,ColorVariable="A")
 geobasemap('none')
 grid('off')
+gx.FontSize = 12;
+gx.FontName = 'CMU Serif';
+gx.ZoomLevel = 10.84;
+gx.LatitudeLabel.FontSize = 15;
+gx.LongitudeLabel.FontSize = 15;
 cb = colorbar;
-set(gca,'ColorScale','log')
+cb.FontSize = 12;
+clim([-1.5,1.5])
 export_fig(strcat(path.figs,'Baseline/prod'),'-pdf','-transparent'); 
 
 
 % Local Productivity (Unadjusted)
 figure; 
+gx = geoaxes;
 geoplot(chicago_eq,ColorVariable="Araw")
 geobasemap('none')
 grid('off')
+gx.FontSize = 12;
+gx.FontName = 'CMU Serif';
+gx.ZoomLevel = 10.84;
+gx.LatitudeLabel.FontSize = 15;
+gx.LongitudeLabel.FontSize = 15;
 cb = colorbar;
+cb.FontSize = 12;
+clim([-1.5,1.5])
 export_fig(strcat(path.figs,'Baseline/prod_raw'),'-pdf','-transparent'); 
 
 % Local Amenities
 figure; 
+gx = geoaxes;
 geoplot(chicago_eq,ColorVariable="B")
 geobasemap('none')
 grid('off')
+gx.FontSize = 12;
+gx.FontName = 'CMU Serif';
+gx.ZoomLevel = 10.84;
+gx.LatitudeLabel.FontSize = 15;
+gx.LongitudeLabel.FontSize = 15;
 cb = colorbar;
-set(gca,'ColorScale','log')
+cb.FontSize = 12;
+clim([-1.5,1.5])
 export_fig(strcat(path.figs,'Baseline/amenities'),'-pdf','-transparent'); 
 
 
 % Local (Endogenous) Amenities
 figure; 
-geoplot(chicago_eq,ColorVariable="B")
+gx = geoaxes;
+geoplot(chicago_eq,ColorVariable="b")
 geobasemap('none')
 grid('off')
+gx.FontSize = 12;
+gx.FontName = 'CMU Serif';
+gx.ZoomLevel = 10.84;
+gx.LatitudeLabel.FontSize = 15;
+gx.LongitudeLabel.FontSize = 15;
 cb = colorbar;
-set(gca,'ColorScale','log')
+cb.FontSize = 12;
+clim([-1.5,1.5])
 export_fig(strcat(path.figs,'Baseline/eAmenities'),'-pdf','-transparent'); 
 
 
 % Density of development
 figure; 
-geoplot(chicago_eq,ColorVariable="varphi")
+gx = geoaxes;
+geoplot(chicago_eq,ColorVariable="land_dev")
 geobasemap('none')
 grid('off')
+gx.FontSize = 12;
+gx.FontName = 'CMU Serif';
+gx.ZoomLevel = 10.84;
+gx.LatitudeLabel.FontSize = 15;
+gx.LongitudeLabel.FontSize = 15;
 cb = colorbar;
-set(gca,'ColorScale','log')
-export_fig(strcat(path.figs,'Baseline/varphi'),'-pdf','-transparent'); 
+cb.FontSize = 12;
+clim([-1.5,1.5])
+export_fig(strcat(path.figs,'Baseline/land_dev'),'-pdf','-transparent'); 
 
 
 %% Counterfactual exercise (Fixing population)
@@ -157,7 +215,7 @@ eq.b(id(1)) = eq.b(id(1)) + 2*std(eq.b);
 eq.B(id(1)) = eq.B(id(1)) + 2*std(eq.B);
 
 % Solve new equilibrium
-eq_new = auxFuncs.countAgg(par,eq,d_mat,true,true);
+[eq_new, = auxFuncs.countAgg(par,eq,d_mat,true,true);
 
 % Columns for change
 chng = [2,5,10,14,18,22];
