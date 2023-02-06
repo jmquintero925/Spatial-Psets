@@ -308,7 +308,16 @@ As shown by Figure \ref{fig:amenities_base}, in our benchmark version of the mod
 \begin{figure}[h]
     \centering
     \caption{Production}
-    \includegraphics[width=.75\linewidth]{Pset1/Figures/Single Agent/Baseline/prod.pdf}
+    \begin{subfigure}{0.49\textwidth}
+         \centering
+         \includegraphics[width=\textwidth]{Pset1/Figures/Single Agent/Baseline/prod_raw.pdf}
+         \caption{Raw}
+    \end{subfigure}  
+    \begin{subfigure}{0.49\textwidth}
+         \centering \includegraphics[width=\linewidth]{Pset1/Figures/Single Agent/Baseline/prod.pdf}
+         \caption{Adjusted}
+    \end{subfigure}
+    
     \label{fig:prod_base}
 \end{figure}
 When running our counterfactuals, and first fix population. Home prices increase substantially in Hyde Park and Downto
