@@ -13,7 +13,8 @@ classdef    auxFuncs
             % Get residents
             resident    = data.num_residents(Irp);
             % Get wages 
-            wages   = eq_tab.omega(Iwp);
+            wages   = data.wages(Iwp);
+            wages   = wages/geomean(wages);
             % Get commuting costs
             d_ij = exp(-par.theta*par.kappa*d_mat(Irp,Iwp));
             % Normalize residents relative to geometric mean
@@ -75,7 +76,7 @@ classdef    auxFuncs
             % Initialize adjusted vector of adjusted wages wages
             omega = ones(sum(Iwp),1);
             % Define toelrance and parameter of adjustment
-            tol = 1e-06;
+            tol = 1e-10;
             adj = 0.5;
             % Create matrix of commuting costs adjusted by elasticity
             dij = exp(-par.theta*par.kappa*d_mat(:,Iwp));
@@ -93,7 +94,7 @@ classdef    auxFuncs
                 % Get predicted values of residents
                 pWorkers = (C_omega')*residents;
                 % Get new value of Delta
-                Delta = max((workers-pWorkers).^2);
+                Delta = max(abs(workers-pWorkers));
                 % Update wages (adjusted) if necessary
                 omega_hat = (workers./pWorkers).*omega;
                 omega = [omega,omega_hat]*[adj;1-adj];
@@ -112,6 +113,8 @@ classdef    auxFuncs
             end
             % Back up preference parameters
             E = (omega./data.wages(Iwp)).^(par.theta);
+            omega = omega.^(1/par.theta);
+            omega(omega>0) = omega(omega>0)/geomean(omega(omega>0));
             % Save in structure
             eq_tab.E(Iwp)     = E;
             eq_tab.omega(Iwp) = omega;
@@ -125,7 +128,7 @@ classdef    auxFuncs
         end
         % Function that solves the fix point for the counterfactual
         % Fixed amenities
-        function [out,new] = countAgg(par,eq,d_mat,agg,pop)
+        function [out,vnew] = countAgg(par,eq,d_mat,agg,pop)
             % Initial population
             init_pop = sum(eq.num_employment);
             % Unpack endogenous objects
@@ -134,15 +137,14 @@ classdef    auxFuncs
             floorDist   = eq.floorDist;
             % Fixed objects
             b           = eq.b*agg+eq.B*(~agg);
-            varphi      = eq.varphi;
             land        = eq.land;
-            K           = land.^(1-par.mu);
+            K           = eq.varphi.*land.^(1-par.mu);
             % Unpack objects that will change over the loop
             A = eq.A;
             B = eq.B;
             % Define toelrance and parameter of adjustment
-            tol = 1e-06;
-            adj = 0.5;
+            tol = 1e-2;
+            adj = 0.34;
             % Create matrix of commuting costs adjusted by elasticity
             dij = exp(-par.theta*par.kappa*d_mat);
             % Begin fix point routine
@@ -150,6 +152,7 @@ classdef    auxFuncs
             counter = 0;
             flag    = true;
             tic;
+            error = [];
             while(Delta>tol)
                 % Counter
                 counter = counter +1;
@@ -169,20 +172,20 @@ classdef    auxFuncs
                 workers  = tPop*sum(pi_ij,1)';
                 resident = tPop*sum(pi_ij,2);
                 % Production
-                Y = A.*(workers.^par.alpha).*(floorDist.*varphi.*K).^(1-par.alpha);
+                Y = A.*(workers.^par.alpha).*(floorDist.*K).^(1-par.alpha);
                 % Workers income
                 v = sum(pi_ij_i.*(wage'),2);
                 % Update endogenous objects
                 % Wages
                 wage_hat = par.alpha*Y./workers;
                 % Price of land
-                q    = ((1-par.alpha)*Y+(1-par.beta)*v.*resident)./(varphi.*K);
+                q    = ((1-par.alpha)*Y+(1-par.beta)*v.*resident)./K;
                 idx = (A>0 & B==0);
-                q(idx) = (1-par.alpha).*Y(idx)./(floorDist(idx).*varphi(idx).*K(idx));
+                q(idx) = (1-par.alpha).*Y(idx)./(floorDist(idx).*K(idx));
                 idx = A==0 & B>0;
-                q(idx) = ((1-par.beta).*v(idx).*resident(idx))./((1-floorDist(idx)).*varphi(idx).*K(idx));
+                q(idx) = ((1-par.beta).*v(idx).*resident(idx))./((1-floorDist(idx)).*K(idx));
                 % Floor distribution
-                f_hat = ((1-par.alpha)*Y)./(q.*varphi.*K);
+                f_hat = ((1-par.alpha)*Y)./(q.*K);
                 f_hat(A>0 & B==0) = 1;
                 f_hat(A==0 & B>0) = 0;
                 % Update B if agglomerations are endogenous
@@ -190,10 +193,12 @@ classdef    auxFuncs
                     % Get new Omega
                     Omega = exp(-par.rho*d_mat)*(resident./land);
                     % Get new amenities
-                    B = b.*(Omega.^par.eta);
+                    nB =  b.*(Omega.^par.eta);
+                    B  = [B,nB]*[adj;1-adj];
                 end
                 % Calculate differences
-                Delta = max(max([(wage-wage_hat),(Q-q),(floorDist-f_hat)].^2));
+                Delta = max(mean(abs([(wage-wage_hat),(Q-q),(floorDist-f_hat)])));
+                error = [error;Delta];
                 % Update guesses
                 new = [[wage,wage_hat];[Q,q];[floorDist,f_hat]]*[adj;1-adj];
                 % Unpack new wages
@@ -206,7 +211,7 @@ classdef    auxFuncs
                 idx  = idx + par.N; 
                 floorDist = new(idx);
                 % Give an exit
-                if(counter==5e3)
+                if(counter>5e4)
                     flag = false;
                     break;
                 end
@@ -217,6 +222,13 @@ classdef    auxFuncs
                 % Display amount of time and iterations
                 fprintf('Fix Point solved. Time elapsed %2.2f seconds in %5i iterations .\n',time,counter);
             else
+                figure;
+                hold on
+                plot(error)
+                plot(xlim(),[tol,tol],'--k')
+                set(gca,'xscale','log')
+                set(gca,'yscale','log')
+                %-------------------------------------------------
                 error('Fix point not solved. Check for tolerance');
             end
             % Save object in table
@@ -233,14 +245,14 @@ classdef    auxFuncs
             % Return either population and utility
             if(pop)
                 % Save population
-                new(1) = tPop;
+                vnew(1) = tPop;
                 % Save utility
-                new(2) = (Phi^(1/par.theta))*par.gammaAdj;    
+                vnew(2) = (Phi^(1/par.theta))*par.gammaAdj;    
             else
                 % Save population
-                new(1) = tPop;
+                vnew(1) = tPop;
                 % Save utility
-                new(2) = 1; 
+                vnew(2) = 1; 
             end
         end
     

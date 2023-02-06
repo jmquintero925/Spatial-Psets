@@ -210,77 +210,141 @@ export_fig(strcat(path.figs,'Baseline/land_dev'),'-pdf','-transparent');
 eq = join(base_eq,data);
 
 % Perturbate parameters
-eq.A(id(1)) = eq.A(id(1)) + 0.5*std(eq.A);
+eq.A(id(1)) = eq.A(id(1)) + 2*std(eq.A);
 eq.b(id(1)) = eq.b(id(1)) + 2*std(eq.b);
 eq.B(id(1)) = eq.B(id(1)) + 2*std(eq.B);
 
 % Solve new equilibrium
-[eq_new, = auxFuncs.countAgg(par,eq,d_mat,true,true);
+[eq_n,eqv1] = auxFuncs.countAgg(par,eq,d_mat,true,true);
 
 % Columns for change
 chng = [2,5,10,14,18,22];
-names = eq_new.Properties.VariableNames;
-
-names(chng)
+names = eq_n.Properties.VariableNames;
 
 % Calculate percentual change
-pChng = table2array(eq_new(:,chng))./table2array(eq(:,chng))-1;
+pChng = table2array(eq_n(:,chng))./table2array(eq(:,chng))-1;
 % Add to table for specific variables
 for j= 1:length(chng)
-    eq_new.(names{chng(j)})  = pChng(:,j);
+    eq_n.(names{chng(j)})  = pChng(:,j);
 end
 
 % Paste shapefile
-eq_new = join(chicago,eq_new,"LeftKeys","RegionID","RightKeys","regionid");
+eq_n = join(chicago,eq_n,"LeftKeys","RegionID","RightKeys","regionid");
 
 
 % Wages
 figure; 
-geoplot(eq_new,ColorVariable="omega")
+gx = geoaxes;
+map = geoplot(eq_n,ColorVariable="omega");
 geobasemap('none')
 grid('off')
+gx.FontSize = 12;
+gx.FontName = 'CMU Serif';
+gx.ZoomLevel = 10.84;
+gx.LatitudeLabel.FontSize = 15;
+gx.LongitudeLabel.FontSize = 15;
 cb = colorbar;
+cb.FontSize = 12;
+clim(0.5*[-1,1])
+cb.TickLabels = strcat(string(cb.Ticks*100),'%');
 export_fig(strcat(path.figs,'Counterfactual/Fix Population/wages'),'-pdf','-transparent'); 
 
 
 % Amenities
 figure; 
-geoplot(eq_new,ColorVariable="B")
+gx = geoaxes;
+geoplot(eq_n,ColorVariable="B")
 geobasemap('none')
 grid('off')
+gx.FontSize = 12;
+gx.FontName = 'CMU Serif';
+gx.ZoomLevel = 10.84;
+gx.LatitudeLabel.FontSize = 15;
+gx.LongitudeLabel.FontSize = 15;
 cb = colorbar;
+cb.FontSize = 12;
+clim(0.05*[-1,1])
+cb.TickLabels = strcat(string(cb.Ticks*100),'%');
 export_fig(strcat(path.figs,'Counterfactual/Fix Population/ammenities'),'-pdf','-transparent'); 
 
 % Floor distribution
 figure; 
-geoplot(eq_new,ColorVariable="floorDist")
+gx = geoaxes;
+geoplot(eq_n,ColorVariable="floorDist")
 geobasemap('none')
 grid('off')
 cb = colorbar;
+geobasemap('none')
+grid('off')
+gx.FontSize = 12;
+gx.FontName = 'CMU Serif';
+gx.ZoomLevel = 10.84;
+gx.LatitudeLabel.FontSize = 15;
+gx.LongitudeLabel.FontSize = 15;
+cb = colorbar;
+cb.FontSize = 12;
+clim([-1,1])
+cb.TickLabels = strcat(string(cb.Ticks*100),'%');
 export_fig(strcat(path.figs,'Counterfactual/Fix Population/comFloor'),'-pdf','-transparent'); 
 
 % Employment
 figure; 
-geoplot(eq_new,ColorVariable="num_employment_eq_new")
+gx = geoaxes;
+geoplot(eq_n,ColorVariable="num_employment_eq_n")
 geobasemap('none')
 grid('off')
 cb = colorbar;
+geobasemap('none')
+grid('off')
+gx.FontSize = 12;
+gx.FontName = 'CMU Serif';
+gx.ZoomLevel = 10.84;
+gx.LatitudeLabel.FontSize = 15;
+gx.LongitudeLabel.FontSize = 15;
+cb = colorbar;
+cb.FontSize = 12;
+clim([-1,1])
+cb.TickLabels = strcat(string(cb.Ticks*100),'%');
 export_fig(strcat(path.figs,'Counterfactual/Fix Population/workers'),'-pdf','-transparent'); 
 
 % Residents
 figure; 
-geoplot(eq_new,ColorVariable="num_residents_eq_new")
+gx = geoaxes;
+geoplot(eq_n,ColorVariable="num_residents_eq_n")
 geobasemap('none')
 grid('off')
 cb = colorbar;
+geobasemap('none')
+grid('off')
+gx.FontSize = 12;
+gx.FontName = 'CMU Serif';
+gx.ZoomLevel = 10.84;
+gx.LatitudeLabel.FontSize = 15;
+gx.LongitudeLabel.FontSize = 15;
+cb = colorbar;
+cb.FontSize = 12;
+clim([-1,1])
+cb.TickLabels = strcat(string(cb.Ticks*100),'%');
 export_fig(strcat(path.figs,'Counterfactual/Fix Population/residents'),'-pdf','-transparent'); 
 
 % Housing
 figure; 
-geoplot(eq_new,ColorVariable="home_price_eq_new")
+gx = geoaxes;
+geoplot(eq_n,ColorVariable="home_price_eq_n")
 geobasemap('none')
 grid('off')
 cb = colorbar;
+geobasemap('none')
+grid('off')
+gx.FontSize = 12;
+gx.FontName = 'CMU Serif';
+gx.ZoomLevel = 10.84;
+gx.LatitudeLabel.FontSize = 15;
+gx.LongitudeLabel.FontSize = 15;
+cb = colorbar;
+cb.FontSize = 12;
+clim([-1,1])
+cb.TickLabels = strcat(string(cb.Ticks*100),'%');
 export_fig(strcat(path.figs,'Counterfactual/Fix Population/housing'),'-pdf','-transparent'); 
 
 
@@ -290,75 +354,142 @@ export_fig(strcat(path.figs,'Counterfactual/Fix Population/housing'),'-pdf','-tr
 eq = join(base_eq,data);
 
 % Perturbate parameters
-eq.A(id(1)) = eq.A(id(1)) + 0.5*std(eq.A);
+eq.A(id(1)) = eq.A(id(1)) + 2*std(eq.A);
 eq.b(id(1)) = eq.b(id(1)) + 2*std(eq.b);
 eq.B(id(1)) = eq.B(id(1)) + 2*std(eq.B);
 
 % Solve new equilibrium
-eq_new = auxFuncs.countAgg(par,eq,d_mat,true,false);
+[eq_n,eqv2] = auxFuncs.countAgg(par,eq,d_mat,true,false);
 
 % Columns for change
 chng = [2,5,10,14,18,22];
-names = eq_new.Properties.VariableNames;
+names = eq_n.Properties.VariableNames;
 
 
 % Calculate percentual change
-pChng = table2array(eq_new(:,chng))./table2array(eq(:,chng))-1;
+pChng = table2array(eq_n(:,chng))./table2array(eq(:,chng))-1;
 % Add to table for specific variables
 for j= 1:length(chng)
-    eq_new.(names{chng(j)})  = pChng(:,j);
+    eq_n.(names{chng(j)})  = pChng(:,j);
 end
 
 % Paste shapefile
-eq_new = join(chicago,eq_new,"LeftKeys","RegionID","RightKeys","regionid");
+eq_n = join(chicago,eq_n,"LeftKeys","RegionID","RightKeys","regionid");
 
+%%
 
 % Wages
 figure; 
-geoplot(eq_new,ColorVariable="omega")
+gx = geoaxes;
+map = geoplot(eq_n,ColorVariable="omega");
 geobasemap('none')
 grid('off')
+gx.FontSize = 12;
+gx.FontName = 'CMU Serif';
+gx.ZoomLevel = 10.84;
+gx.LatitudeLabel.FontSize = 15;
+gx.LongitudeLabel.FontSize = 15;
 cb = colorbar;
+cb.FontSize = 12;
+clim([0,8])
+cb.TickLabels = strcat(string(cb.Ticks*100),'%');
 export_fig(strcat(path.figs,'Counterfactual/Fix utility/wages'),'-pdf','-transparent'); 
 
 
 % Amenities
 figure; 
-geoplot(eq_new,ColorVariable="B")
+gx = geoaxes;
+geoplot(eq_n,ColorVariable="B")
 geobasemap('none')
 grid('off')
+gx.FontSize = 12;
+gx.FontName = 'CMU Serif';
+gx.ZoomLevel = 10.84;
+gx.LatitudeLabel.FontSize = 15;
+gx.LongitudeLabel.FontSize = 15;
 cb = colorbar;
+cb.FontSize = 12;
+clim(0.05*[-1,1])
+cb.TickLabels = strcat(string(cb.Ticks*100),'%');
 export_fig(strcat(path.figs,'Counterfactual/Fix utility/ammenities'),'-pdf','-transparent'); 
 
 % Floor distribution
 figure; 
-geoplot(eq_new,ColorVariable="floorDist")
+gx = geoaxes;
+geoplot(eq_n,ColorVariable="floorDist")
 geobasemap('none')
 grid('off')
 cb = colorbar;
+geobasemap('none')
+grid('off')
+gx.FontSize = 12;
+gx.FontName = 'CMU Serif';
+gx.ZoomLevel = 10.84;
+gx.LatitudeLabel.FontSize = 15;
+gx.LongitudeLabel.FontSize = 15;
+cb = colorbar;
+cb.FontSize = 12;
+clim([-1,1])
+cb.TickLabels = strcat(string(cb.Ticks*100),'%');
 export_fig(strcat(path.figs,'Counterfactual/Fix utility/comFloor'),'-pdf','-transparent'); 
 
 % Employment
 figure; 
-geoplot(eq_new,ColorVariable="num_employment_eq_new")
+gx = geoaxes;
+geoplot(eq_n,ColorVariable="num_employment_eq_n")
 geobasemap('none')
 grid('off')
 cb = colorbar;
+geobasemap('none')
+grid('off')
+gx.FontSize = 12;
+gx.FontName = 'CMU Serif';
+gx.ZoomLevel = 10.84;
+gx.LatitudeLabel.FontSize = 15;
+gx.LongitudeLabel.FontSize = 15;
+cb = colorbar;
+cb.FontSize = 12;
+clim([-1,1])
+cb.TickLabels = strcat(string(cb.Ticks*100),'%');
 export_fig(strcat(path.figs,'Counterfactual/Fix utility/workers'),'-pdf','-transparent'); 
 
 % Residents
 figure; 
-geoplot(eq_new,ColorVariable="num_residents_eq_new")
+gx = geoaxes;
+geoplot(eq_n,ColorVariable="num_residents_eq_n")
 geobasemap('none')
 grid('off')
 cb = colorbar;
+geobasemap('none')
+grid('off')
+gx.FontSize = 12;
+gx.FontName = 'CMU Serif';
+gx.ZoomLevel = 10.84;
+gx.LatitudeLabel.FontSize = 15;
+gx.LongitudeLabel.FontSize = 15;
+cb = colorbar;
+cb.FontSize = 12;
+clim([-1,1])
+cb.TickLabels = strcat(string(cb.Ticks*100),'%');
 export_fig(strcat(path.figs,'Counterfactual/Fix utility/residents'),'-pdf','-transparent'); 
 
 % Housing
 figure; 
-geoplot(eq_new,ColorVariable="home_price_eq_new")
+gx = geoaxes;
+geoplot(eq_n,ColorVariable="home_price_eq_n")
 geobasemap('none')
 grid('off')
 cb = colorbar;
+geobasemap('none')
+grid('off')
+gx.FontSize = 12;
+gx.FontName = 'CMU Serif';
+gx.ZoomLevel = 10.84;
+gx.LatitudeLabel.FontSize = 15;
+gx.LongitudeLabel.FontSize = 15;
+cb = colorbar;
+cb.FontSize = 12;
+clim([-1,1])
+cb.TickLabels = strcat(string(cb.Ticks*100),'%');
 export_fig(strcat(path.figs,'Counterfactual/Fix utility/housing'),'-pdf','-transparent'); 
 
