@@ -320,21 +320,25 @@ As shown by Figure \ref{fig:amenities_base}, in our benchmark version of the mod
     
     \label{fig:prod_base}
 \end{figure}
-When running our counterfactuals, and first fix population. Home prices increase substantially in Hyde Park and Downto
+When running our counterfactuals, we first fix population. The positive amenity and productivity shock increase home prices substantially in Hyde Park and Downtown. It makes sense that home prices are now higher in a location with higher amenities. However, it is less intuitive to understand what is happening downtown. Notice that less people now live downtown, but more people start commuting there. Thus, the increase in corporate demand for space bids up home valuations in the downtown area. 
 
 \begin{figure}[h!]
 \centering
     \caption{Home Prices and Residents}
     \begin{subfigure}{0.75\textwidth}
          \centering
+         \caption{Home Prices}
          \includegraphics[width=\textwidth]{Pset1/Figures/Single Agent/Counterfactual/Fix Population/housing.pdf}
     \end{subfigure}  
     \begin{subfigure}{0.75\textwidth}
          \centering
+         \caption{Number of Residents}
          \includegraphics[width=\linewidth]{Pset1/Figures/Single Agent/Counterfactual/Fix Population/residents.pdf}
     \end{subfigure}
     \label{fig:pop_house_res}
 \end{figure}
+\clearpage
+Figure \ref{fig:pop_wage_work} illustrates that wages do not necessarily rise in Hyde Park where productivity is higher. However, the number of workers in the neighborhood decreases (remember we quantify the Obama Library as an amenity shock and do not consider an increase in job opportunities). Additionally, wages rise almost everyone except downtown. The are a few neighborhoods on the south side where wages rise over a half a percent. Therefore, after the positive amenity shock on the south side more high wage workers commute there, and we observe less segregation in wage throughout the city. 
 \begin{figure}[h!]
 \centering
     \caption{Wages and Workers}
@@ -348,7 +352,8 @@ When running our counterfactuals, and first fix population. Home prices increase
     \end{subfigure}
     \label{fig:pop_wage_work}
 \end{figure}
-Then we fix utility and get 
+\clearpage
+Fixing utility leads to similar patterns: more people now live in Hyde Park and less people live downtown (Figure \ref{fig:ut_house_res}). Moreover, workers concentrate more downtown, but the type of type of worker is more evenly distributed across space. 
 \begin{figure}[h!]
 \centering
     \caption{Home Prices and Residents}
@@ -360,7 +365,7 @@ Then we fix utility and get
          \centering
          \includegraphics[width=\linewidth]{Pset1/Figures/Single Agent/Counterfactual/Fix utility/residents.pdf}
     \end{subfigure}
-    \label{fig:pop_house_res}
+    \label{fig:ut_house_res}
 \end{figure}
 \begin{figure}[h!]
 \centering
@@ -373,7 +378,7 @@ Then we fix utility and get
          \centering
          \includegraphics[width=\linewidth]{Pset1/Figures/Single Agent/Counterfactual/Fix utility/workers.pdf}
     \end{subfigure}
-    \label{fig:pop_wage_work}
+    \label{fig:ut_wage_work}
 \end{figure}
 
 
