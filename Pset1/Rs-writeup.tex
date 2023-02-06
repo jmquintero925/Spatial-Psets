@@ -33,34 +33,37 @@
 
 
 
-Chicago is a widely studied city---it is unique in its spatial distribution of people and economic activity. Particularly salient in Chicago, is its history of racial segregation. In fact, \citet{seg2021} find that Chicago is the fourth most segregated city in the country. The stark differences in economic activity and well-being across space documented since the Great Migration have persisted over time. In Section 2, we illustrate how income and wealth are highly concentrated in the north and northwestern parts of the city. In order to capture these unique features of the Chicago landscape, we build a quantitative spatial model in Chicago in the cross-section with two types of agents -- low and high skilled workers.\footnote{Other than the fact that this assignment is a static exercise, we argue that dynamics do not add much to understanding the persistent spatial differences. If dynamics mattered more, we might expect the spatial distribution of activity to change.} We are particularly interested in how different types of people sort across space in face of a positive amenity and productivity shock. With this analysis, we hope to contextualize the general equilibrium implications of the construction of the Barack Obama Presidential Center on the south side of a Chicago in a previously amenity-poor neighborhood. We find that worker types are more evenly distributed across space when amenities in the south are higher. Furthermore, home prices are much higher in the neighborhood where the shock occurs, but this does not spillover to neighboring neighborhoods.  
+Chicago is a widely studied city both for its size and its unique spatial distribution of people and economic activity. Particularly salient in Chicago is its history of racial segregation. In fact, \citet{seg2021} find that Chicago is the fourth most segregated city in the country as of 2020. The stark differences in economic activity and well-being across space documented since the Great Migration have persisted over time. In Section 2, we illustrate how income and wealth are highly concentrated in the north and northwestern parts of the city. In order to capture these unique features of the Chicago landscape, we build a quantitative spatial model in the cross-section with two types of agents -- low and high skilled workers.\footnote{Other than the fact that this assignment is a static exercise, we argue that dynamics do not add much to understanding the persistent spatial differences. If dynamics mattered more, we might expect the spatial distribution of activity to change.} 
 
+We are particularly interested in how different types of people sort across space in face of a positive amenity and productivity shock. With this analysis, we hope to contextualize the general equilibrium implications of the construction of the Barack Obama Presidential Center on the south side of Chicago in a previously amenity-poor neighborhood. We find that worker types are more evenly distributed across space when amenities in the south are higher. Furthermore, home prices are much higher in the neighborhood where the shock occurs, but this does not spillover to neighboring areas.  
 
-In Section 2, we discuss the unique features of wages and workers across Chicago. In Section 3, we present our model. Section 4 describes our counterfactual exercise while Section 5 details our data. In Section 6, we layout our quantification strategy and, finally, in Section 7 we present our results. 
+In Section 2, we discuss the unique features of Chicago. In Section 3, we present our model. Section 4 describes our counterfactual exercise while Section 5 details our data. In Section 6, we layout our quantification strategy and, finally, in Section 7 we present our results. 
 
 
 \section{Diagnostic of Chicago}
 
-Chicago was incorporated as a city in 1837 for its unique location as an important trading post during the nation's westward expansion. Still today, 50 percent of all freight rail travels through Chicago \citep{chicagohistory}. Chicago blossomed as a hub for trading agricultural products from the fertile soils of the Midwest to markets on the east coast and in Europe. Successfully rebuilding after the fire of 1871, Chicago entered into the global conversation by hosting the 1893 World's Fair in Jackson Park -- the very same park on which we will center our analysis. Steel, railroads, and especially meatpacking dominated Chicago's economy, but as the century changed Chicago became critical in fostering new industries such as the chemical industry, mail-order sales, telephone equipment and the radio \citep{chicagobrit}. 
+Chicago was incorporated as a city in 1837 for its unique location as an important trading post during the nation's westward expansion. Still today, 50 percent of all freight rail travels through the city \citep{chicagohistory}. Chicago blossomed as a hub for trading agricultural products from the fertile soils of the Midwest to markets on the east coast and in Europe. Successfully rebuilding after the fire of 1871, Chicago entered into the global conversation by hosting the 1893 World's Fair in Jackson Park -- the very same park on which we will center our analysis. Steel, railroads, and especially meatpacking dominated Chicago's economy, but as the century changed Chicago became critical in fostering new industries such as the chemical industry, mail-order sales, telephone equipment and the radio \citep{chicagobrit}. 
 
-Chicago experienced tectonic population shifts in the mid-20th century as millions of black Americans from the oppressed Jim Crow South moved north and settled in Chicago. As documented by \citet{derenoncourt2022}, the local policy response in terms of shifting of public funds and redlining created a segregated city the remnants of which are still with us today. Towards the end of the 1900s manufacturing industries left the crowded city in search of cheaper labor markets in the south and west \citep{chicagobrit}. This further depressed wages in the heavily black neighborhoods of the city. Today, Chicago has become a tale of two cities. The north and northeast of the city are wealthier and has a disproportionate share of the White population; while the west and southwest of the city are poorer and has a disproportionate share of the Black population \citep{southside2022}. 
+Chicago experienced tectonic population shifts in the mid-20th century as millions of Black Americans from the Jim Crow South moved north and settled in Chicago. As documented by \citet{derenoncourt2022}, the local policy response in terms of shifting of public funds and redlining created a segregated city the remnants of which are with us today. Towards the end of the 1900s, manufacturing left the crowded city in search of cheaper labor markets in the south and west \citep{chicagobrit}. This further depressed wages in the heavily Black neighborhoods. Today, Chicago has become a tale of two cities. The north and northeast of the city are wealthier and have a disproportionate share of the White population; while the west and southwest of the city are poorer and have a disproportionate share of the Black population \citep{southside2022}. 
 \begin{figure}[h!]
 \centering
     \caption{Population by Race and Income}
     \begin{subfigure}{0.52\textwidth}
          \centering
          \includegraphics[width=\textwidth]{Pset1/Figures/Descriptive/racial_map.pdf}
+         \caption{Racial Segregation}
          \label{fig:racial_divide}
     \end{subfigure}  
     \begin{subfigure}{0.45\textwidth}
          \centering
          \includegraphics[width=\linewidth]{Pset1/Figures/Descriptive/income_map.png}
+         \caption{Income Differences}
         \label{fig:income_divide}
     \end{subfigure}
 \end{figure}
-In the left panel, the blue dots represent black Americans, the red dots are white Americans, the green dots are Hispanic Americans, and the purple dots are Asian Americans. It is easy to see that race is correlated with income in the city of Chicago. Therefore, in our analysis we proxy racial segregation with wage segregation. 
+In Figure \ref{fig:racial_divide}, the blue dots are Black Americans, the red dots are White Americans, the green dots are Hispanic Americans, and the purple dots are Asian Americans. It is easy to see the correlations between race and income today. In our analysis, we proxy racial segregation with wage segregation, or the gap between high and low wage workers.
 
-As demonstrated in Figure \ref{fig:housing_diag}, housing prices similarly reflect the concentration of wealth in the north and northeast of Chicago
+As demonstrated in Figure \ref{fig:housing_diag}, housing prices similarly reflect the concentration of wealth in the north and northwest of Chicago
 \begin{figure}[h!]
     \centering
     \caption{Home Valuations in 2019}
@@ -96,9 +99,9 @@ Unsurprisingly, commuting probability from each neighborhood to downtown Chicago
     \end{subfigure}
     \label{fig:commute_time}
 \end{figure}
-The figures above demonstrate there is a stark difference in the income, home valuations, and wages offered in different regions of Chicago which correlates more with race than it does with driving cost as interpreted as driving time. To further emphasize the point, we compare the a low and high income neighborhood.  
+The figures above demonstrate there is a stark difference in the income, home valuations, and wages offered in different regions of Chicago which correlates more with race than it does with driving cost as interpreted as driving time. To further emphasize the point, we compare a low and high income neighborhood.  
 
-Figure XX presents the commuting patterns of one of the poorest neighborhoods in the city, Englewood, and one of the highest income neighborhoods, Lincoln Park. While within Englewood, most of the commuters are going to downtown Chicago, we find that 24\% of these commuters work low-wage jobs. This stands in stark contrast to the commuting pattern of Lincoln Park---where the gravity remains in downtown Chicago. However, only 6\% of these commutes consist of low-wage earners. 
+Figure \ref{fig:englewood_lincoln} presents the commuting patterns of one of the poorest neighborhoods in the city, Englewood, and one of the highest income neighborhoods, Lincoln Park. Within Englewood, most of the commuters travel to downtown Chicago; however, we find that 24\% of these commuters work low-wage jobs. This stands in stark contrast to the commuting pattern of Lincoln Park---where the gravity remains in downtown Chicago. However, only 6\% of these commuters consist of low-wage earners. 
 \begin{figure}[h!]
 \centering
     \caption{Englewood versus Lincoln Park}
@@ -119,7 +122,7 @@ Figure \ref{fig:lowwage_commute} shows the share of commuters that have low-wage
     \includegraphics[width=\linewidth]{Pset1/code/lodes_diagnostics_files/figure-html/fig-sharelowtypebyhome-1.png}
     \label{fig:lowwage_commute}
 \end{figure}
-Finally, we focus on the commuting characterisics of East Hyde Park. East Hyde Park is unique in that it is a high-income neighborhood located next to lower-income neighborhoods such as Woodlawn.\footnote{East Hyde Park is in the 95th percentile of the income distribution in Chicago.} Residents in East Hyde Park commute mostly to Hyde Park and downtown Chicago. It is not a neighborhood with a lot of employment opportunities: Consider its neighbor, Hyde Park, which attracts up to over 30\% of the commuters from certain neighborhoods. In contrast, Figure \ref{ehp} shows that East Hyde Park attracts at most 1\% the commuters from any given neighborhood. 
+Finally, we focus on the commuting characterisics of East Hyde Park. East Hyde Park is unique in that it is a high-income neighborhood located next to lower-income neighborhoods such as Woodlawn.\footnote{East Hyde Park is in the 95th percentile of the income distribution in Chicago.} Residents in East Hyde Park commute mostly to Hyde Park and downtown Chicago. It is not a neighborhood with a lot of employment opportunities: Consider its neighbor, Hyde Park, which attracts over 30\% of the commuters from certain neighborhoods. In contrast, Figure \ref{fig:ehp} shows that East Hyde Park attracts at most 1\% of the commuters from any given neighborhood. 
 \begin{figure}[h!]
     \centering
     \caption{Commuters to East Hyde Park}
@@ -285,7 +288,7 @@ Finally, we calculate commuting duration and distance between neighborhoods by i
 
 \section{Quantification Strategy}
 
-We have data for commuting flows, commuting costs, home prices, aggregate land, proportion of land for production, and wages by origin and destination. We use the following parameter values from the literature
+We have data for commuting flows, commuting costs, home prices, aggregate land, proportion of land for production, and wages by origin and destination. We use the parameter values from the literature presented in Table \ref{tab:tab1}. 
 \begin{table}[h]
     \centering
     \caption{Parameter Values}
@@ -380,7 +383,7 @@ Fixing utility leads to similar patterns: more people now live in Hyde Park and 
 
 
 
-
+\nocite{*}
 \clearpage
 
 \printbibliography
