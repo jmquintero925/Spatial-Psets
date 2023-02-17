@@ -1,0 +1,194 @@
+\documentclass[12pt]{amsart}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath, amssymb, bm, xcolor}
+\usepackage{booktabs, adjustbox, float}
+\usepackage[T1]{fontenc}
+\usepackage{palatino}
+\setlength{\parindent}{0em}
+\setlength{\parskip}{1em}
+
+\usepackage{xargs}       
+\usepackage[textsize=footnotesize,obeyFinal,
+textwidth=1.3in]{todonotes}
+\newcommandx{\RW}[2][1=]{\todo[inline, linecolor=olive,backgroundcolor=olive!25,bordercolor=olive,#1]{\textbf{RW:} #2}}
+\newcommandx{\JMQ}[2][1=]{\todo[inline, linecolor=olive,backgroundcolor=olive!25,bordercolor=olive,#1]{\textbf{JMQ:} #2}}
+\newcommandx{\JW}[2][1=]{\todo[inline, linecolor=olive,backgroundcolor=olive!25,bordercolor=olive,#1]{\textbf{JW:} #2}}
+
+
+\title{Problem Set 2: Model and Extensions}
+\author{}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\textbf{Summary} We are going to take the model from ``Economic Geography of Global Warming'' as the base, and we will extend it by considering adaptation costs that agents can pay to influence the damage function on amenities. This is unobservable: the damage function that Cruz \& Rossi-Hansberg (2022) estimates includes these adaptation responses. We will back this out using a revealed preference approach as in Carleton et al. (2022). We will argue that understanding the true damage function, not the net damage function, is important in counterfactuals.
+
+\section{Model}
+
+The world economy is on a 2-dimensional surface $S$, a location is defined as a point $r \in S$ with land density $H(r)$. $L_t$ agents live in the world economy in each period $t$.
+
+\subsection{Endowment and Preferences}
+
+The period utility of agent $i$ who resides in $r$ in period $t$ who has a location history $r_{-} = (r_0, \dots, r_{t-1})$ is:
+\begin{equation}
+    u^i_t(r_{-}, r) = \left[\int_0^1 c_t^\omega(r)^\rho d\omega\right]^{\sigma/{\rho}} b_t(r) \epsilon_t^i(r) \prod_{s=1}^t m(r_{s-1}, r_s)^{-1} \label{eq:utility}
+\end{equation}
+\begin{itemize}
+    \item $c_t^\omega(r)$ is a set of differentiated varieties (which are aggregated CES) 
+    \item $b_t(r)$ are local amenities. Amenities $b_t(r)$ can be written in terms of a congestion component and an exogenous component:
+    \begin{align}
+        b_t(r) &= \overline{b}_t(r) L_t(r)^{-\lambda} \label{eq:amenities} \\
+        \overline{b}_t(r) &= \overline{b}_{t-1}(r) \bigg(1 + \Lambda^b(\Delta T_t(r), T_{t-1}(r))\bigg) \label{eq:fundamental_amenities}
+    \end{align}
+    where $T_t(r) = \Delta T_t(r) + T_{t-1}(r)$ is the change in local temperatures from period $t-1$ to $t$. $\Lambda^b$ is the damage function that distorts amenities.
+    \item $\epsilon_t^i(r)$ is an idiosyncratic preference for the location where they live; let this be Frechet with shape parameter $1/\Omega$ and scale parameter 1.
+    \item $m(r,s)$ is a mobility cost of moving from $r$ to $s$ in period $t$ (this is paid as a flow cost from $t$ onward). $m(r,s) = m_1(r) m_2(s)$. Note that we let origin cost simply be the inverse of the destination costs. \textbf{This means that the permanent utility cost of entering a location is compensated by a permanent utility benefit when leaving, $\bm{\implies}$ agents only pay the flow cost moving somewhere while residing there!}
+\end{itemize}
+
+They inelastically supply one unit of labor and receive wage $w_t(r)$ and a share of land rents $H(r) R_t(r)$ which are uniformly distributed across a location's residents. Per capita real income is: $$y_t(r) = \frac{w_t(r) + R_t(r) / L_t(r)}{P_t(r)}$$ where $L_t(r)$ is population density and $P_t(r)$ is the local ideal CES price index. \textbf{$\bm{\sigma}$ governs the elasticity of utility to real income}
+
+Standard discrete choice algebra will yield that the share of people living in a location $r$ is approximated by the probability that an agent chooses to live there. This is given by:
+\begin{equation}
+    \frac{L_t(r) H(r)}{L_t} = \frac{(y_t(r)^\sigma b_t(r) m_2(r)^{-1})^{1/\Omega}}{\int_S (y_t(v)^\sigma b_t(v) m_2(v)^{-1})^{1/\Omega}} \label{eq:prob_moving}
+\end{equation}
+
+\subsection{Technology}
+
+There is a continuum of firms in each cell producing differentiated varieties $\omega \in [0,1]$ There is CRS in land, labor, and energy. Output per unit of land of variety $\omega$ is:
+\begin{equation}
+    q_t^\omega(r) = {\phi_t^\omega(r)}^{\gamma_1} z_t^\omega(r) [{L_t^\omega(r)}^{\chi} {e_t^\omega(r)}^{1-\chi}]^\mu \label{eq:technology}
+\end{equation}
+\begin{itemize}
+    \item $L_t^\omega(r)$ is production workers per unit of land
+    \item $e_t^\omega(r)$ is energy use per unit of land
+    \item Land is a fixed factor with share $1-\mu$, so agglomerating labor and energy in a location has decreasing returns 
+    \item $\phi_t^\omega(r) \geq 1 $ is a firm's innovation decision. Firms can invest in innovation by paying a cost $\nu \phi_t^\omega(r)^{\xi}$ (this is in units of labor)
+    \item $z_t^\omega(r)$ is an idiosyncratic location-variety productivity shifter which is iid Frechet with scale parameter $a_t(r)$
+    \begin{itemize}
+        \item $a_t(r)$ is affected by agglomeration externalities as a consequence of high population density and endogenous past innovations:
+        \begin{equation}
+            a_t(r) = \overline{a}_t(r) L_t(r)^\alpha \label{eq:productivity}
+        \end{equation}
+    \end{itemize}
+    \item Fundamental productivity is determined by:
+        \begin{equation}
+            \overline{a}_t(r) = \left( 1 + \Lambda^a(\Delta T_t(r), T_{t-1}(r)) \right) \left( \phi_{t-1}(r)^{\theta \gamma_1} \left(\int_S D(\nu,r) \overline{a}_{t-1}(v) dv \right)^{1-\gamma_2} \overline{a}_{t-1}(r)^{\gamma_2} \right) \label{eq:fundamental_productivity}
+        \end{equation}
+    \begin{itemize}
+        \item $\phi_{t-1}(r)^{\theta \gamma_1}$  is the shift in the local distribution of shocks that results from last period's innovation decisions of firms, which is now embedded in the local technology
+        \item $\left(\int_S D(\nu,r) \overline{a}_{t-1}(v) dv \right)^{1-\gamma_2} \overline{a}_{t-1}(r)^{\gamma_2}$ is the level of past technology that firms build on. There integrated part is technology diffusion, and $D(v,r)$ governs how strong the decay is across space.
+        \item $\Lambda^a(\cdot)$ is the productivity damage function.
+    \end{itemize}
+    \item Energy and labor is aggregated through a CD where $(1-\chi)\mu$ is the share of energy in the production process. Energy is a CES composite between fossil fuels and clean sources. $\kappa$ is the relative productivity of both technologies in producing energy 
+    \JW{Another idea here is to just plug in the endowment of energy and fossil in each location to get at trade in energy and the energy mix in each location.}
+    \begin{equation}
+        e_t^\omega(r) = \left(\kappa e_t^{f,\omega}(r)^{(\epsilon-1)/\epsilon} +(1-\kappa) e_t^{c,\omega}(r)^{(\epsilon-1)/\epsilon}\right)^{\epsilon/(\epsilon-1)} \label{eq:energy_agg}
+    \end{equation}
+    \begin{itemize}
+        \item Let local energy markets be competitive so the price of each type of energy is equal to its marginal production cost.
+        \item Producing 1 unit of energy of type $j$ requires $\mathcal{Q}_t^j(r)$ units of labor. This cost of energy varies across location, time, and source:
+        \begin{equation}
+            \mathcal{Q}_t^f(r) = \frac{f(\operatorname{CumCO_2)_{t-1}}}{\zeta_t^f(r)} ~~ \text{and} ~~ \mathcal{Q}_t^c(r) = \frac{1}{\zeta_t^c(r)} \label{eq:energy_cost}
+        \end{equation}
+        this assumes that the extraction of fossil fuel is convex in total world cumulative emissions. This implies that fossil fuels markets are globally integrated such that marginal extraction costs are equal to the agg. level. This implicitly states that there is friction-less trade in fossil fuels.
+        \JW{this seems unrealistic, but its fine} 
+        \item Cumulative emissions is:
+        \begin{equation}
+            \operatorname{CumCO_2}_t = \operatorname{CumCO_2}_{t-1} + E_t^f = \operatorname{CumCO_2}_{t-1} + \int_S \int_0^1 e_t^{f,\omega}(v) H(v) d\omega dv \label{eq:cumulative_emissions}
+        \end{equation}
+        \item $\zeta$ is the productivity of each energy source, which is related to the global real GDP (which is endogenous):
+        \begin{equation}
+            \zeta^j_t(r) = \left(\frac{y_t}{y_{t-1}}\right)^{\nu^j} \zeta^j_{t-1}(r) ~~ \text{where} ~~ y_t^\omega = \int_S \left(\frac{L_t(v) H(v)}{L_t}\right) y_t(v) dv \label{eq:energy_prod}
+        \end{equation}
+        That is, a one percent increase in global real GDP raises log productivty in energy generation by $\nu^j$. Note that firm's innovation (which increases GDP) can generate an externality on energy productivity improvements. 
+    \end{itemize}
+\end{itemize}
+
+Assume that land markets are competitive: \textbf{firms bid for land and the firm whose bid is the largest wins the right to produce in that parcel of land.} Thus, since past innovations are embedded in the parcel's local idiosyncratic productivity, benefits all entrants. This implies that the solution to the dynamic innovation problem of firms is to choose the level of innovation that maximizes their current profits \textit{since all future gains of current innovations will accrue to land}, which is a fixed factor. Since there is a continuum of potential entrants, firms end up bidding all of their profits after covering innovation costs.
+\JW{I don't think this is that ridiculous compared to a creative destruction model? Should read geography of development for the argument}
+
+Firm's problem is simply (note that we denoted all the energy, etc. in units of labor):
+\begin{equation*}
+    \max_{q,L,\phi, e^f, e^c} p_t^\omega(r, r) q_t^\omega(r) - w_t(r) L_t^\omega(r) - w_t(r) \nu \phi_t^\omega(r)^\xi - w_t(r) \mathcal{Q}_t^fe_t^{f,\omega}(r) - w_t(r) - \mathcal{Q}_t^c(r) e_t^{c, \omega}(r) - R_t(r) 
+\end{equation*}
+\begin{itemize}
+    \item $p_t^\omega(r,r)$ is the price at location $r$ of variety $\omega$ produced at $r$
+    \item $\mathcal{Q}_t(r)$ is the ideal price index of energy: 
+    \begin{equation*}
+        \mathcal{Q}_t(r) = \left(\kappa^\epsilon \mathcal{Q}_t^f(r)^{1-\epsilon} + (1-\kappa)^\epsilon \mathcal{Q}_t^c(r)^{1-\epsilon}\right)^{1/(1-\epsilon)}
+    \end{equation*}
+\end{itemize}
+\JW{Should read Desmet et al. to fill this in---because energy is cobb-douglas, it collapses into a simple problem}
+
+Since goods markets are competitive, firms are selling goods at MC after transport cost $\varsigma(s,r)\geq 1$. This implies: $p_t^\omega(s,r) = \varsigma(s,r) \frac{mc_t(r)}{z_t^\omega(r)}$. The marginal cost is given by:
+\begin{equation*}
+    mc_t(r) = \mathcal{M} \mathcal{Q}_t(r)^{\mu (1-\chi)} w_t(r)^{\mu + \gamma_1 / \xi} R_t(r)^{1-\mu-\gamma_1 / \xi}
+\end{equation*}
+\JW{I don't know what $\mathcal{M}$ is? They say its a proportionality constant that depends on parameters?}
+
+\subsection{Prices, Export Shares, and Trade Balance}
+
+As always, we can see that the probability that a good produced in $r$ is consumed at $s$ is given by the following:
+\begin{equation}
+    \pi_t(s,r) = \frac{a_t(r) \left( mc_t(r) \varsigma(r,s) \right)^{-\theta}}{\int_S a_t(v) \left(mc_t(v) \varsigma(v, s)\right)^{-\theta} dv} \label{eq:prob_trade}
+\end{equation}
+
+\JW{I can't quite get the right exponent on the price index---maybe someone can help me check it?}
+
+
+Impose trade balance cell by cell:
+\begin{equation}
+    w_t(r) L_t(r) H(r) = \int_S \pi_t(v, r) w_t(v) L_t(v) H(v) dv \label{eq:trade_balance}
+\end{equation}
+
+\subsection{Carbon Cycle}
+
+Stock of carbon $S_t$ evolves as:
+\begin{equation}
+    S_{t+1} = S_\text{pre-ind} + \sum_{l=1}^\infty (1-\delta_l) \left( E_{t+1-l}^f - E_{t+1-l}^x \right) \label{eq:carbon_stock}
+\end{equation}
+\begin{itemize}
+    \item $E_t^f$ is endogenous $CO_2$ emissions from fossil fuel usage
+    \item $E_t^x$ are exogenous $CO_2$ non-fuel emissions from RCP 8.5 or 6.0\footnote{I think these take into account the nonlinearity in damage functions, but will have to check. If not would be a good thing to add.}
+    \item $S_\text{pre-ind}$ is the stock in pre-industrial era
+    \item $1-\delta_l$ is share of $CO_2$ emissions remaining in atmosphere $l$ periods ahead
+\end{itemize}
+
+Higher concentrations of $CO_2$ leades to a rise in radiative forcing:
+\begin{equation}
+    F_{t+1} = \varphi \log_2\left(\frac{S_{t+1}}{ S_\text{pre-ind}}\right) + F_{t+1}^x \label{eq:radiative_forcing}
+\end{equation}
+where $F_t^x$ is the radiative forcing from other GHGs, taken from RCP 8.5 or 6.0. $\varphi$ is the sensitivity of forcing---how much does radiative forcing increase when carbon stock doubles?
+
+Global temperatures is governed by the following:
+\begin{equation}
+    T_{t+1} = T_\text{pre-ind} + \sum_{l=0}^\infty \varsigma_l F_{t+1-l} \label{eq:global_temp}
+\end{equation}
+where $\varsigma_l$ is the current temperature response to an increase in the radiative force $l$ periods ago.
+
+You can downscale global temperatures to local temperatures with the following:
+\begin{equation}
+    T_t(r) - T_{t-1}(r) = g(r) \cdot (T_t - T_{t-1}) \label{eq:downscale_temp}
+\end{equation}
+where $g(r)$ is time-invariant and depend on local physical characteristics of a location.\footnote{You can also make this more realistic where agents can affect this $g(r)$---think deforestation, etc. that make you more vulnerable to global changes in temperature.}
+
+\subsection{Competitive Equilibrium}
+
+Note that the systems of equations above can be reduced to a system of equations for populations and wages in each location. Then, all other variables can be computed using the equations above (such as firm investment, etc.).
+
+A spatial equilibrium in any period determines firm innovation, energy use, and emissions. Then, equations \ref{eq:fundamental_amenities}, \ref{eq:fundamental_productivity}, \ref{eq:carbon_stock}--\ref{eq:downscale_temp} determines the next period's temperatures, amenities, and productivities.
+
+Note that you need the following conditions to reach a unique equilibrium:
+\begin{itemize}
+    \item $\epsilon=1$ or $\nu^f = \nu^c$---the elasticity of substitution between fossil and clean energy is one (Cobb-Douglas) or the innovation elasticity with respect to global real income growth is same across clean and dirty energy.
+    \JW{I think this is basically ensuring that we can nest this model in the Desmet et al. model?}
+    \item $\alpha / \theta + \gamma_1 / \xi \leq \lambda / \sigma + (1-mu) + \Omega / \sigma$ This is basically agglomeration forces has to be weaker than congestion forces. That is, the agglomeration associated with local production externalities $\alpha/\theta$ and degree of returns to innovation $\gamma_1/\xi$ do not dominate the three congestion forces.
+\end{itemize}
+
+\section{Extension: Estimating the ``Real'' Damage Function}
+
+\JW{To-do}
+
+\end{document}
