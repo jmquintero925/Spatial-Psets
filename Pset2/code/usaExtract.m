@@ -1,7 +1,13 @@
-function out = usaExtract()
+function out = usaExtract(varargin)
+% Check if the function has arguments
 
-% Load set of coordinates 
-load('../data/usa_coord.mat')
+if(nargin==0)
+    % Load set of coordinates
+    load('../data/usa_coord.mat')
+else
+    usa = varargin{1};
+end
+
 % Create matrices of long and lat 
 lat = repmat(flip(-89.5:89.5)',1,360);
 long = repmat(-179.5:179.5,180,1);
